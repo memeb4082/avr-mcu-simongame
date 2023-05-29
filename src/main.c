@@ -3,6 +3,7 @@
 #include <stdio.h>
 
 #include <sequence.h>
+#include <delay.h>
 
 #define E328 10163
 #define C284 11737
@@ -12,6 +13,7 @@
 volatile uint16_t freq = E328;
 volatile uint32_t STATE_LFSR = 0x11230851;
 volatile uint8_t BIT;
+volatile uint8_t DELAY;
 uint32_t const MASK = 0xE2023CAB;
 void init_tca(void)
 {
@@ -36,7 +38,7 @@ void adc_init(void)
     ADC0.CTRLB = ADC_PRESC_DIV2_gc;
     ADC0.CTRLC = ADC_TIMEBASE4_bm | ADC_REFSEL_VDD_gc;
     ADC0.CTRLE = 64; // Sample duration
-    ADC0.CTRLF = ADC_FREERUN_bm; // Sets the ADC xto free running mode
+    ADC0.CTRLF = ADC_FREERUN_bm; // Sets the ADC to free running mode
     ADC0.CTRLF |= ADC_LEFTADJ_bm; // Left adjusts the contents of the result
     /* Sets the ADC to read from the pin connected to the potentiometer */
     ADC0.MUXPOS = ADC_MUXPOS_AIN2_gc;
@@ -53,6 +55,7 @@ int main(void)
     PORTA.PIN5CTRL = PORT_PULLUPEN_bm;
     PORTA.PIN6CTRL = PORT_PULLUPEN_bm;
     PORTA.PIN7CTRL = PORT_PULLUPEN_bm;
+    // Potentiometer
     // Initialize timers
     init_tca();
     init_tcb();
