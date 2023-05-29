@@ -1,28 +1,49 @@
-#include <timers.h>
-void init_tca()
+#include <stdint.h>
+#include <avr/io.h>
+#include <avr/interrupt.h>
+#include <states.h>
+#include <spi.h>
+volatile uint8_t pb_state = 0xFF;
+volatile uint16_t playback = 1;
+volatile uint16_t elapsed = 0;
+volatile uint16_t new_time = 1;
+volatile uint8_t allow_update = 0;
+extern volatile uint8_t DISP;
+extern volatile note NOTE;
+ISR(TCB0_INT_vect)
 {
-    cli();
-    TCA0.SINGLE.CTRLA = TCA_SINGLE_CLKSEL_DIV1_gc | TCA_SINGLE_ENABLE_bm;
-    TCA0.SINGLE.CTRLB = TCA_SINGLE_CMP0EN_bm | TCA_SINGLE_WGMODE_SINGLESLOPE_gc;
-    TCA0.SINGLE.PER = freq;
-    TCA0.SINGLE.CMP0 = freq >> 1;
-    sei();
-}
-void init_tcb()
-{
-    cli();
-    TCB0.CTRLA = TCB_CLKSEL_DIV1_gc;
-    TCB0.CTRLB = TCB_CNTMODE_INT_gc;
-    TCB0.INTCTRL = TCB_CAPT_bm;
-    TCB0.CCMP = 3333;
-    TCB0.CTRLA |= TCB_ENABLE_bm;
-    sei();
-}
-ISR(TCA0_INT_VECT)
-{
+    elapsed++;
 
+    if (allow_update)
+    {
+        playback = new_time;
+        allow_update = 0;
+    }
+    switch (NOTE)
+    {
+    case EHIGH:
+        spi_write(0b0111110);
+        break;
+    case CSHARP:
+        spi_write(0b1101011);
+        break;
+    case A:
+        spi_write(0b0111110 | (0x01 << 7));
+        break;
+    case ELOW:
+        spi_write(0b1101011 | (0x01 << 7));
+        break;
+    }
+    TCB0.INTFLAGS = TCB_CAPT_bm;
 }
-ISR(TCB0_INT_VECT)
+ISR(TCB1_INT_vect)
 {
-
+    static uint8_t c0, c1;
+    c0 = 0;
+    c1 = 0;
+    uint8_t pb_edge = pb_state ^ PORTA.IN;
+    c1 = (c1 ^ c0) & pb_edge;
+    c0 = ~c0 & pb_edge;
+    pb_state ^= (c0 & c1);
+    TCB1.INTFLAGS = TCB_CAPT_bm;
 }
