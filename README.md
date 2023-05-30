@@ -38,6 +38,12 @@ Student number: n12345678 &rarr; STATE_LFSR = 0x12345678
 - The octave of the playback frequencies can be increased or decreased through UART commands.
 - The frequencies should remain within the range of human hearing (20Hz to 20kHz).
 
+    | E(high)  | C♯     | A      | E(low)   |
+    | -------- | ------ | ------ | -------- |
+    | $4xx^{\frac{-5}{12}}$  | $4xx^{\frac{-8}{12}}$ | $4xx$ | $4xx^{\frac{-17}{12}}$ |
+    
+    - $xx$ = last two digits of your student number.
+    - Frequencies are in hz and should be rounded to the nearest integer.
 ## Gameplay through UART
 - Instead of using the pushbuttons, the user can input certain keys in the serial monitor to perform actions.
 - The UART interface is configured to 9600—8-N-1.
