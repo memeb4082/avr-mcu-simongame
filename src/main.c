@@ -8,10 +8,10 @@
 #include <timers.h>
 #include <spi.h>
 uint32_t STATE_LFSR = 0xE2023CAB;
-volatile uint32_t MASK = 0x11230851;
+uint32_t MASK = 0x11230851;
 volatile uint8_t pb_released = 0;
 volatile state GAME_STATE = INIT;
-volatile note NOTE = EHIGH;
+volatile note NOTE = E_HIGH;
 volatile uint32_t STATE;
 int main()
 {
@@ -36,19 +36,19 @@ int main()
 
         if (pb_falling & PB1)
         {
-            NOTE = EHIGH;
+            NOTE = E_HIGH;
         }
         else if (pb_falling & PB2)
         {
-            NOTE = A;
+            NOTE = A_MIDDLE;
         }
         else if (pb_falling & PB3)
         {
-            NOTE = CSHARP;
+            NOTE = C_SHARP;
         }
         else if (pb_falling & PB4)
         {
-            NOTE = ELOW;
+            NOTE = E_LOW;
         }
         play_tone();
     }

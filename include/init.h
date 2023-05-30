@@ -5,11 +5,16 @@
 #include <avr/interrupt.h>
 #include <variables.h>
 
+/*
+Set PORTB directory to buzzer and uart
+*/
 void port_init()
 {
 	PORTB.DIRSET = PIN2_bm | PIN0_bm;
 }
-
+/*
+Enable S1-S4 as inputs
+*/
 void pb_init()
 {
 	PORTA.PIN4CTRL = PORT_PULLUPEN_bm;
@@ -17,26 +22,30 @@ void pb_init()
 	PORTA.PIN6CTRL = PORT_PULLUPEN_bm;
 	PORTA.PIN7CTRL = PORT_PULLUPEN_bm;
 }
-
+/*
+Enable PWM on Timer A
+*/
 void pwm_init()
 {
 	TCA0.SINGLE.CTRLB = TCA_SINGLE_WGMODE_SINGLESLOPE_gc | TCA_SINGLE_CMP0EN_bm;
 	/*
 	PWM 440HZ
-	TODO: change to initially frequency
+	[x] change to initially frequency
 	long statement to round float to int and shii
-	TODO: make function for rounding or use standard library maybe
+	[] make function for rounding or use standard library maybe
 	*/
-	TCA0.SINGLE.PER = ((F_CPU / 440) >= 0) ? (int)((F_CPU / 440) + 0.5) : (int)((F_CPU / 440) - 0.5);
+	TCA0.SINGLE.PER = ((F_CPU / E_HIGH) >= 0) ? (int)((F_CPU / E_HIGH) + 0.5) : (int)((F_CPU / E_HIGH) - 0.5);
 	/*
 	0% duty cycle
-	TODO: add the rounding stuff ig
+	[] add the rounding stuff ig
 	*/
 	TCA0.SINGLE.CMP0 = 0;
 	// Enable TCA0
 	TCA0.SINGLE.CTRLA = TCA_SINGLE_ENABLE_bm;
 }
-
+/*
+Initialize Timer B
+*/
 void timer_init()
 {
 	/*
@@ -52,14 +61,18 @@ void timer_init()
 	TCB1.INTCTRL = TCB_CAPT_bm;
 	TCB1.CTRLA = TCB_ENABLE_bm;
 }
-
+/*
+Initialize UART (Universal Synchronous/Asynchronous Receiver and Transmitter)
+*/
 void uart_init()
 {
 	USART0.BAUD = (((4 * F_CPU) / (BR)) >= 0) ? (int)((4 * F_CPU) / (BR) + 0.5) : (int)((4 * F_CPU) / (BR)-0.5);
 	USART0.CTRLA = USART_RXCIE_bm;
 	USART0.CTRLB = USART_RXEN_bm | USART_TXEN_bm;
 }
-
+/*
+Initialize SPI (Serial Peripheral Interface) 
+*/
 void spi_init()
 {
 	PORTMUX.SPIROUTEA = PORTMUX_SPI0_ALT1_gc;
@@ -71,7 +84,9 @@ void spi_init()
 	SPI0.INTCTRL = SPI_IE_bm;
 	SPI0.CTRLA |= SPI_ENABLE_bm;
 }
-
+/*
+Initialize ADC (Analog to Digital Converter) with potentiometer as input
+*/
 void adc_init()
 {
 	ADC0.CTRLA = ADC_ENABLE_bm;
@@ -82,7 +97,9 @@ void adc_init()
 	ADC0.MUXPOS = ADC_MUXPOS_AIN2_gc;
 	ADC0.COMMAND = ADC_MODE_SINGLE_12BIT_gc | ADC_START_IMMEDIATE_gc;
 }
-
+/*
+Wrapper for all initialize functions
+*/
 void init()
 {
 	cli();

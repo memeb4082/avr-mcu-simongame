@@ -5,6 +5,9 @@
 
 volatile int8_t octave = 0;
 extern volatile note NOTE;
+/*
+Handles buzzer tone playback of different tones at different octaves
+*/
 void play_tone()
 {
     // switch case handles which note to playback
@@ -25,7 +28,9 @@ void play_tone()
     }
     TCA0.SINGLE.CMP0BUF = TCA0.SINGLE.PERBUF >> 1;
 }
-
+/*
+Clears CMP0BUF on TCA0 to stop buzzer playback
+*/
 void stop_tone()
 {
     TCA0.SINGLE.CMP0BUF = 0;
