@@ -3,22 +3,23 @@
 #include <sequence.h>
 #include <init.h>
 #include <playback.h>
-#include <states.h>
+#include <variables.h>
 #include <sequence.h>
 #include <timers.h>
 #include <spi.h>
 uint32_t STATE_LFSR = 0xE2023CAB;
 volatile uint32_t MASK = 0x11230851;
 volatile uint8_t pb_released = 0;
-volatile state STATE = INIT;
+volatile state GAME_STATE = INIT;
 volatile note NOTE = EHIGH;
+volatile uint32_t STATE;
 int main()
 {
     init();
+    // Initial game state
+    STATE = next_step(&MASK);
     // Clear DISP
     spi_write(0xFF);
-    // Start playing
-    play_tone();
     // PB State
     uint8_t pb_prev = 0xFF;
     uint8_t pb_new = 0xFF;

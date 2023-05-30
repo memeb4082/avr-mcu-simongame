@@ -1,9 +1,9 @@
-#include <avr/io.h>
-#include <avr/interrupt.h>
-
 #ifndef INIT_H
 #define INIT_H 1
-#define BR 9600
+
+#include <avr/io.h>
+#include <avr/interrupt.h>
+#include <variables.h>
 
 void port_init()
 {

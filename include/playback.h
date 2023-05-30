@@ -2,7 +2,7 @@
 #define PLAYBACK_H 1
 
 #include <stdint.h>
-#include <states.h>
+#include <variables.h>
 
 extern volatile int8_t octave;
 extern volatile note NOTE;

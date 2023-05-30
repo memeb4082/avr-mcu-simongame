@@ -1,7 +1,7 @@
 #ifndef TIMERS_H
 #define TIMERS_H 1
 #include <stdint.h>
-#include <states.h>
+#include <variables.h>
 extern volatile uint8_t pb_state;
 extern volatile uint16_t playback;
 extern volatile uint16_t elapsed;

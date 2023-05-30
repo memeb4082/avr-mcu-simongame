@@ -1,11 +1,7 @@
 #include <stdint.h>
 #include <avr/io.h>
 #include <avr/interrupt.h>
-#include <states.h>
-#define E_HIGH 9866
-#define C_SHARP 11732
-#define A_MIDDLE 7391
-#define E_LOW 19732
+#include <variables.h>
 
 volatile int8_t octave = 0;
 extern volatile note NOTE;
@@ -33,24 +29,4 @@ void play_tone()
 void stop_tone()
 {
     TCA0.SINGLE.CMP0BUF = 0;
-}
-
-ISR(USART0_RXC_vect)
-{
-    char c = USART0.RXDATAL;
-    if (c == ',')
-        c = 'k';
-    if (c == '.')
-        c = 'l';
-    switch (c)
-    {
-    case 'k':
-        if (octave < 4)
-            octave++;
-        break;
-    case 'l':
-        if (octave > -4)
-            octave--;
-        break;
-    }
 }

@@ -1,7 +1,7 @@
 #include <stdint.h>
 #include <avr/io.h>
 #include <avr/interrupt.h>
-#include <states.h>
+#include <variables.h>
 #include <spi.h>
 volatile uint8_t pb_state = 0xFF;
 volatile uint16_t playback = 1;
