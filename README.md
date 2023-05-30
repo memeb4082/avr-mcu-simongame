@@ -1,4 +1,4 @@
-# Simon Game CAB202 2023
+# Simon Game CAB202
 
 ## Gameplay
 - Upon system reset or starting a new game, the sequence length is set to one.
