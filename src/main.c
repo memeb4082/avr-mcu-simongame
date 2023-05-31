@@ -11,7 +11,7 @@ uint32_t STATE_LFSR = 0xE2023CAB;
 uint32_t MASK = 0x11230851;
 volatile uint8_t pb_released = 0;
 volatile state GAME_STATE = INIT;
-volatile note NOTE = E_HIGH;
+volatile note NOTE = EHIGH;
 volatile uint32_t STATE;
 int main()
 {
@@ -36,20 +36,23 @@ int main()
 
         if (pb_falling & PB1)
         {
-            NOTE = E_HIGH;
+            NOTE = EHIGH;
+            play_tone();
         }
         else if (pb_falling & PB2)
         {
-            NOTE = A_MIDDLE;
+            NOTE = A;
+            play_tone();
         }
         else if (pb_falling & PB3)
         {
-            NOTE = C_SHARP;
+            NOTE = CSHARP;
+            play_tone();
         }
         else if (pb_falling & PB4)
         {
-            NOTE = E_LOW;
+            NOTE = ELOW;
+            play_tone();
         }
-        play_tone();
     }
 }

@@ -14,7 +14,7 @@ void play_tone()
     switch (NOTE)
     {
     case EHIGH:
-        TCA0.SINGLE.PERBUF = (int)(F_CPU / E_HIGH) >> (octave);
+        TCA0.SINGLE.PERBUF = (int)(F_CPU / NOTE) >> (octave);
         break;
     case CSHARP:
         TCA0.SINGLE.PERBUF = (int)(F_CPU / C_SHARP) >> (octave);
