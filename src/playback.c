@@ -3,7 +3,7 @@
 #include <avr/interrupt.h>
 #include <variables.h>
 
-volatile int8_t octave = 0;
+extern volatile int8_t octave;
 extern volatile note NOTE;
 /*
 Handles buzzer tone playback of different tones at different octaves
@@ -14,7 +14,7 @@ void play_tone()
     switch (NOTE)
     {
     case EHIGH:
-        TCA0.SINGLE.PERBUF = (int)(F_CPU / NOTE) >> (octave);
+        TCA0.SINGLE.PERBUF = (int)(F_CPU / E_HIGH) >> (octave);
         break;
     case CSHARP:
         TCA0.SINGLE.PERBUF = (int)(F_CPU / C_SHARP) >> (octave);
@@ -26,7 +26,8 @@ void play_tone()
         TCA0.SINGLE.PERBUF = (int)(F_CPU / E_LOW) >> (octave);
         break;
     }
-    TCA0.SINGLE.CMP0BUF = TCA0.SINGLE.PERBUF >> 1;
+    // TODO: up the duty cycle, set to lower value so i dont destroy my fucking ears
+    TCA0.SINGLE.CMP0BUF = TCA0.SINGLE.PERBUF >> 8;
 }
 /*
 Clears CMP0BUF on TCA0 to stop buzzer playback

@@ -7,12 +7,33 @@
 #include <sequence.h>
 #include <timers.h>
 #include <spi.h>
-uint32_t STATE_LFSR = 0xE2023CAB;
-uint32_t MASK = 0x11230851;
+
+// TODO: check if var names match
+uint32_t STATE_LFSR = 0x11230851;
+uint32_t MASK = 0xE2023CAB;
 volatile uint8_t pb_released = 0;
+volatile int8_t octave = 2;
 volatile state GAME_STATE = INIT;
 volatile note NOTE = EHIGH;
 volatile uint32_t STATE;
+char c;
+uint8_t uart_getc(void) {
+    while (!(USART0.STATUS & USART_RXCIF_bm));  // Wait for data
+    return USART0.RXDATAL;
+}
+
+void uart_putc(uint8_t c) {
+    while (!(USART0.STATUS & USART_DREIF_bm));  // Wait for TXDATA empty
+    USART0.TXDATAL = c;
+}
+
+void uart_puts(char * string) {
+    int i = 0;
+    while(string[i] != '\0') {
+        uart_putc(string[i]);
+        i++;
+    }
+}
 int main()
 {
     init();
@@ -36,23 +57,28 @@ int main()
 
         if (pb_falling & PB1)
         {
-            NOTE = EHIGH;
-            play_tone();
+            NOTE = ELOW;
         }
         else if (pb_falling & PB2)
         {
             NOTE = A;
-            play_tone();
         }
         else if (pb_falling & PB3)
         {
             NOTE = CSHARP;
-            play_tone();
         }
         else if (pb_falling & PB4)
         {
-            NOTE = ELOW;
-            play_tone();
+            NOTE = EHIGH;
         }
+        play_tone();
+        c = uart_getc();
+        if (c == 'k')
+        {
+            octave--;
+        }
+        // ------------------- BUTTONS -------------------- //
+        // uart_putc('k');
+        // play_tone(uart_getc());
     }
 }

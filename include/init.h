@@ -10,7 +10,7 @@ Set PORTB directory to buzzer and uart
 */
 void port_init()
 {
-	PORTB.DIRSET = PIN2_bm | PIN0_bm;
+	PORTB.DIRSET = PIN0_bm | PIN2_bm;
 }
 /*
 Enable S1-S4 as inputs
@@ -32,8 +32,8 @@ void pwm_init()
 	PWM 440HZ
 	[x] change to initially frequency
 	long statement to round float to int and shii
-	[] make function for rounding or use standard library maybe
-	*/
+	TODO: make function for rounding or use standard library maybe
+ 	*/
 	TCA0.SINGLE.PER = ((F_CPU / E_HIGH) >= 0) ? (int)((F_CPU / E_HIGH) + 0.5) : (int)((F_CPU / E_HIGH) - 0.5);
 	/*
 	0% duty cycle
