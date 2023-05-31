@@ -33,7 +33,7 @@ void pwm_init()
 	[x] change to initially frequency
 	long statement to round float to int and shii
 	TODO: make function for rounding or use standard library maybe
- 	*/
+	*/
 	TCA0.SINGLE.PER = ((F_CPU / E_HIGH) >= 0) ? (int)((F_CPU / E_HIGH) + 0.5) : (int)((F_CPU / E_HIGH) - 0.5);
 	/*
 	0% duty cycle
@@ -72,7 +72,7 @@ void uart_init()
 	USART0.CTRLB = USART_RXEN_bm | USART_TXEN_bm;
 }
 /*
-Initialize SPI (Serial Peripheral Interface) 
+Initialize SPI (Serial Peripheral Interface)
 */
 void spi_init()
 {
@@ -90,12 +90,12 @@ Initialize ADC (Analog to Digital Converter) with potentiometer as input
 */
 void adc_init()
 {
-	ADC0.CTRLA = ADC_ENABLE_bm;
-	ADC0.CTRLB = ADC_PRESC_DIV2_gc;
+	ADC0.CTRLA = ADC_ENABLE_bm;		// Enable ADC
+	ADC0.CTRLB = ADC_PRESC_DIV56_gc; // / 56 clock prescaler
 	ADC0.CTRLC = (4 << ADC_TIMEBASE_gp) | ADC_REFSEL_VDD_gc;
-	ADC0.CTRLE = 64;
-	ADC0.CTRLF = ADC_FREERUN_bm | ADC_LEFTADJ_bm;
-	ADC0.MUXPOS = ADC_MUXPOS_AIN2_gc;
+	ADC0.CTRLE = 64;							  // Sample duration of 64
+	ADC0.CTRLF = ADC_FREERUN_bm | ADC_LEFTADJ_bm; // Free running, left adjust
+	ADC0.MUXPOS = ADC_MUXPOS_AIN2_gc;			  // Select AIN2 (potentiomenter R1)
 	ADC0.COMMAND = ADC_MODE_SINGLE_12BIT_gc | ADC_START_IMMEDIATE_gc;
 }
 /*
@@ -104,13 +104,13 @@ Wrapper for all initialize functions
 void init()
 {
 	cli();
-    port_init();
-    pb_init();
-    pwm_init();
-    spi_init();
-    timer_init();
-    uart_init();
+	port_init();
+	pb_init();
+	pwm_init();
+	spi_init();
+	timer_init();
+	uart_init();
 	adc_init();
-    sei();
+	sei();
 }
 #endif

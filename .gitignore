@@ -1,2 +1,4 @@
 *.pdf
 .vscode
+lib/qutyio.o
+include/qutserial.h
