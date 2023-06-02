@@ -4,7 +4,7 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <variables.h>
-
+extern volatile int8_t octave;
 /*
 Set PORTB directory to buzzer and uart
 */
@@ -34,7 +34,7 @@ void pwm_init()
 	long statement to round float to int and shii
 	TODO: make function for rounding or use standard library maybe
 	*/
-	TCA0.SINGLE.PER = ((F_CPU / E_HIGH) >= 0) ? (int)((F_CPU / E_HIGH) + 0.5) : (int)((F_CPU / E_HIGH) - 0.5);
+	TCA0.SINGLE.PER = (((F_CPU / E_HIGH) >= 0) ? (int)((F_CPU / E_HIGH) + 0.5) : (int)((F_CPU / E_HIGH) - 0.5)) >> (octave);
 	/*
 	0% duty cycle
 	[] add the rounding stuff ig
@@ -49,15 +49,15 @@ Initialize Timer B
 void timer_init()
 {
 	/*
-	1ms tcb0 4ms tcb1
-	TODO: check to replace for proper thing
+	1ms tcb0 1ms tcb1
+	[x]: check to replace for proper thing
 	*/
 	TCB0.CCMP = 3333;
 	TCB0.INTCTRL = TCB_CAPT_bm;
 	TCB0.CTRLA = TCB_ENABLE_bm;
 	TCB0.CTRLB = TCB_CNTMODE_INT_gc;
 
-	TCB1.CCMP = 3333 * 4;
+	TCB1.CCMP = 3333;
 	TCB1.INTCTRL = TCB_CAPT_bm;
 	TCB1.CTRLA = TCB_ENABLE_bm;
 }
@@ -66,8 +66,7 @@ Initialize UART (Universal Synchronous/Asynchronous Receiver and Transmitter)
 */
 void uart_init()
 {
-	// USART0.BAUD = (((4 * F_CPU) / (BR)) >= 0) ? (int)((4 * F_CPU) / (BR) + 0.5) : (int)((4 * F_CPU) / (BR)-0.5);
-	USART0.BAUD = 1389;
+	USART0.BAUD = (((4 * F_CPU) / (BR)) >= 0) ? (int)((4 * F_CPU) / (BR) + 0.5) : (int)((4 * F_CPU) / (BR)-0.5);
 	USART0.CTRLA = USART_RXCIE_bm;
 	USART0.CTRLB = USART_RXEN_bm | USART_TXEN_bm;
 }
@@ -90,7 +89,7 @@ Initialize ADC (Analog to Digital Converter) with potentiometer as input
 */
 void adc_init()
 {
-	ADC0.CTRLA = ADC_ENABLE_bm;		// Enable ADC
+	ADC0.CTRLA = ADC_ENABLE_bm;		 // Enable ADC
 	ADC0.CTRLB = ADC_PRESC_DIV56_gc; // / 56 clock prescaler
 	ADC0.CTRLC = (4 << ADC_TIMEBASE_gp) | ADC_REFSEL_VDD_gc;
 	ADC0.CTRLE = 64;							  // Sample duration of 64

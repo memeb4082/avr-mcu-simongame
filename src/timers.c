@@ -2,22 +2,21 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <variables.h>
+#include <playback.h>
 #include <spi.h>
+#include <stdint.h>
 volatile uint8_t pb_state = 0xFF;
-volatile uint16_t playback = 1;
-volatile uint16_t elapsed = 0;
-volatile uint16_t new_time = 1;
-volatile uint8_t allow_update = 0;
+extern volatile uint16_t timerticks;
+extern volatile uint16_t delay;
 extern volatile uint8_t DISP;
+extern volatile state GAME_STATE;
 extern volatile note NOTE;
 ISR(TCB0_INT_vect)
 {
-    elapsed++;
-
-    if (allow_update)
+    if (timerticks < 0xFFFF) timerticks++;
+    if (timerticks == (delay >> 1))
     {
-        playback = new_time;
-        allow_update = 0;
+        stop_tone();
     }
     switch (NOTE)
     {

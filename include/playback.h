@@ -5,7 +5,7 @@
 #include <variables.h>
 
 extern volatile int8_t octave;
-extern volatile int8_t note;
+extern volatile note NOTE;
 
 void play_tone();
 void stop_tone();

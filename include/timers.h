@@ -3,9 +3,8 @@
 #include <stdint.h>
 #include <variables.h>
 extern volatile uint8_t pb_state;
-extern volatile uint16_t playback;
-extern volatile uint16_t elapsed;
-extern volatile uint16_t new_time;
-extern volatile uint8_t allow_update;
+extern volatile uint16_t timerticks;
 extern volatile note NOTE;
+extern volatile state GAME_STATE;
+extern volatile uint16_t delay;
 #endif

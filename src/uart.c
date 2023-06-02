@@ -3,7 +3,6 @@
 #include <variables.h>
 
 extern volatile int8_t octave;
-extern volatile note NOTE;
 
 uint8_t uart_getc(void)
 {

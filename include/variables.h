@@ -9,26 +9,17 @@
 #define C_SHARP 284
 #define A_MIDDLE 451
 #define E_LOW 169
-#define OCTAVES 3
+#define OCTAVES 5
 #define BR 9600
 
-// TODO: check if seed vars are right ig, cause autograder fucked up (worked, bad)
-uint32_t STATE_LFSR = 0x11230851;
-uint32_t MASK = 0xE2023CAB;
-volatile int8_t note;
-volatile uint8_t pb_released = 0;
-volatile int8_t octave = 0;
-volatile state GAME_STATE = INIT;
-volatile input_state INPUT = INIT;
-volatile uint32_t STATE;
-volatile uint8_t score;
-volatile int16_t idx;
-uint8_t delay;
+
 typedef enum
 {
-    INIT,
+    START,
+    AWAITING_SEQUENCE,
     SUCCESS,
     FAIL,
+    FINISH
     // TODO: Figure out all the states and shii
 } state;
 
@@ -44,6 +35,14 @@ typedef enum
     RESET,
     SEED
 } input_state;
+
+typedef enum
+{
+    EHIGH,
+    CSHARP,
+    A,
+    ELOW
+} note;
 
 struct user
 {
