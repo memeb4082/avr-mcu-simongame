@@ -64,12 +64,21 @@ void timer_init()
 /*
 Initialize UART (Universal Synchronous/Asynchronous Receiver and Transmitter)
 */
-void uart_init()
+void uart_init(void)
 {
-	USART0.BAUD = (((4 * F_CPU) / (BR)) >= 0) ? (int)((4 * F_CPU) / (BR) + 0.5) : (int)((4 * F_CPU) / (BR)-0.5);
-	USART0.CTRLA = USART_RXCIE_bm;
-	USART0.CTRLB = USART_RXEN_bm | USART_TXEN_bm;
+    // 9600 baud
+    USART0.BAUD = 1389;
+
+    // Enable receive complete interrupt
+    USART0.CTRLA = USART_RXCIE_bm;
+    USART0.CTRLB = USART_RXEN_bm | USART_TXEN_bm;
 }
+// void uart_init()
+// {
+// 	USART0.BAUD = (((4 * F_CPU) / (BR)) >= 0) ? (int)((4 * F_CPU) / (BR) + 0.5) : (int)((4 * F_CPU) / (BR)-0.5);
+// 	USART0.CTRLA = USART_RXCIE_bm;
+// 	USART0.CTRLB = USART_RXEN_bm | USART_TXEN_bm;
+// }
 /*
 Initialize SPI (Serial Peripheral Interface)
 */

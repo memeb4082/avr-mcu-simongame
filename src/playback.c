@@ -27,7 +27,7 @@ void play_tone()
         break;
     }
     // TODO: up the duty cycle, set to lower value so i dont destroy my fucking ears
-    TCA0.SINGLE.CMP0BUF = TCA0.SINGLE.PERBUF >> 9;
+    TCA0.SINGLE.CMP0BUF = TCA0.SINGLE.PERBUF >> 5;
 }
 /*
 Clears CMP0BUF on TCA0 to stop buzzer playback
