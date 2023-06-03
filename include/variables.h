@@ -9,13 +9,14 @@
 #define C_SHARP 284
 #define A_MIDDLE 451
 #define E_LOW 169
-#define OCTAVES 5
+#define OCTAVES 4
 #define BR 9600
-
-
+#define MASK 0xE2023CAB
 typedef enum
 {
     START,
+    PLAYING_TONE,
+    DISPLAY_SEG,
     AWAITING_SEQUENCE,
     SUCCESS,
     FAIL,

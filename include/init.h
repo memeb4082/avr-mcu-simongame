@@ -34,12 +34,12 @@ void pwm_init()
 	long statement to round float to int and shii
 	TODO: make function for rounding or use standard library maybe
 	*/
-	TCA0.SINGLE.PER = (((F_CPU / E_HIGH) >= 0) ? (int)((F_CPU / E_HIGH) + 0.5) : (int)((F_CPU / E_HIGH) - 0.5)) >> (octave);
+	// TCA0.SINGLE.PER = (((F_CPU / E_HIGH) >= 0) ? (int)((F_CPU / E_HIGH) + 0.5) : (int)((F_CPU / E_HIGH) - 0.5)) >> (octave);
 	/*
 	0% duty cycle
 	[] add the rounding stuff ig
 	*/
-	TCA0.SINGLE.CMP0 = 0;
+	// TCA0.SINGLE.CMP0 = 0;
 	// Enable TCA0
 	TCA0.SINGLE.CTRLA = TCA_SINGLE_ENABLE_bm;
 }
@@ -49,7 +49,7 @@ Initialize Timer B
 void timer_init()
 {
 	/*
-	1ms tcb0 1ms tcb1
+	1ms tcb0 4ms tcb1
 	[x]: check to replace for proper thing
 	*/
 	TCB0.CCMP = 3333;
@@ -57,28 +57,19 @@ void timer_init()
 	TCB0.CTRLA = TCB_ENABLE_bm;
 	TCB0.CTRLB = TCB_CNTMODE_INT_gc;
 
-	TCB1.CCMP = 3333;
+	TCB1.CCMP = 3333 * 4;
 	TCB1.INTCTRL = TCB_CAPT_bm;
 	TCB1.CTRLA = TCB_ENABLE_bm;
 }
 /*
 Initialize UART (Universal Synchronous/Asynchronous Receiver and Transmitter)
 */
-void uart_init(void)
+void uart_init()
 {
-    // 9600 baud
-    USART0.BAUD = 1389;
-
-    // Enable receive complete interrupt
-    USART0.CTRLA = USART_RXCIE_bm;
-    USART0.CTRLB = USART_RXEN_bm | USART_TXEN_bm;
+	USART0.BAUD = (((4 * F_CPU) / (BR)) >= 0) ? (int)((4 * F_CPU) / (BR) + 0.5) : (int)((4 * F_CPU) / (BR)-0.5);
+	USART0.CTRLA = USART_RXCIE_bm;
+	USART0.CTRLB = USART_RXEN_bm | USART_TXEN_bm;
 }
-// void uart_init()
-// {
-// 	USART0.BAUD = (((4 * F_CPU) / (BR)) >= 0) ? (int)((4 * F_CPU) / (BR) + 0.5) : (int)((4 * F_CPU) / (BR)-0.5);
-// 	USART0.CTRLA = USART_RXCIE_bm;
-// 	USART0.CTRLB = USART_RXEN_bm | USART_TXEN_bm;
-// }
 /*
 Initialize SPI (Serial Peripheral Interface)
 */
