@@ -67,7 +67,7 @@ int main()
         an interval of 10ms times 10 to get timerticks (timer ticks every millisecond)
         TODO: Switch to ISR maybe
         */
-        delay = (((175 * ((ADC0.RESULT))) >> 16) + 25) * 10;
+        delay = (0.855 * (ADC0.RESULT >> 5)) + 250;
         // delay = 1;
         /*
         If multiple pushbuttons are on a single port, transitions for all
@@ -176,38 +176,42 @@ int main()
                 qwer -> 113 119 101 114
                 1234 ->  49  50  51  52
                 */
-                if ((pb_falling_edge & PB1) | uart_in == 1)
+                if ((pb_falling_edge & PB1) | (uart_in == 1))
                 {
                     NOTE = EHIGH;
                     play_tone();
-                    pb_released, elapsed_time = 0;
+                    pb_released = 0;
+                    elapsed_time = 0;
                     spi = 0b0111110 | (0x01 << 7);
                     input = 1;
                     u_idx++;
                 }
-                else if ((pb_falling_edge & PB2) | uart_in == 2)
+                else if ((pb_falling_edge & PB2) | (uart_in == 2))
                 {
                     NOTE = CSHARP;
                     play_tone();
-                    pb_released, elapsed_time = 0;
+                    pb_released = 0;
+                    elapsed_time = 0;
                     spi = 0b1101011 | (0x01 << 7);
                     input = 2;
                     u_idx++;
                 }
-                else if ((pb_falling_edge & PB3) | uart_in == 3)
+                else if ((pb_falling_edge & PB3) | (uart_in == 3))
                 {
                     NOTE = A;
                     play_tone();
-                    pb_released, elapsed_time = 0;
+                    pb_released = 0;
+                    elapsed_time = 0;
                     spi = 0b0111110;
                     input = 3;
                     u_idx++;
                 }
-                else if ((pb_falling_edge & PB4) | uart_in == 4)
+                else if ((pb_falling_edge & PB4) | (uart_in == 4))
                 {
                     NOTE = ELOW;
                     play_tone();
-                    pb_released, elapsed_time = 0;
+                    pb_released = 0;
+                    elapsed_time = 0;
                     spi = 0b1101011;
                     input = 4;
                     u_idx++;

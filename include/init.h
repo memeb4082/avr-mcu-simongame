@@ -53,7 +53,7 @@ void timer_init()
 	TCB0.CTRLA = TCB_ENABLE_bm;
 	TCB0.CTRLB = TCB_CNTMODE_INT_gc;
 
-	TCB1.CCMP = 3333;
+	TCB1.CCMP = 3333 >> 2;
 	TCB1.INTCTRL = TCB_CAPT_bm;
 	TCB1.CTRLA = TCB_ENABLE_bm;
 }
@@ -86,7 +86,7 @@ Initialize ADC (Analog to Digital Converter) with potentiometer as input
 void adc_init()
 {
 	ADC0.CTRLA = ADC_ENABLE_bm;		 // Enable ADC
-	ADC0.CTRLB = ADC_PRESC_DIV56_gc; // / 56 clock prescaler
+	ADC0.CTRLB = ADC_PRESC_DIV64_gc; // / 64 clock prescaler
 	ADC0.CTRLC = (4 << ADC_TIMEBASE_gp) | ADC_REFSEL_VDD_gc;
 	ADC0.CTRLE = 64;							  // Sample duration of 64
 	ADC0.CTRLF = ADC_FREERUN_bm | ADC_LEFTADJ_bm; // Free running, left adjust
