@@ -7,6 +7,9 @@
 #include <stdint.h>
 volatile uint8_t pb_state = 0xFF;
 volatile uint16_t elapsed_time = 0;
+volatile uint16_t playback_time = 2000;
+volatile uint16_t new_playback_time = 2000;
+volatile uint8_t allow_updating_playback_delay = 0;
 extern volatile state GAME_STATE;
 ISR(TCB0_INT_vect)
 {
@@ -16,50 +19,6 @@ ISR(TCB0_INT_vect)
     //     stop_tone();
     // }
     elapsed_time++;
-    if (GAME_STATE == PLAYING_TONE)
-    {
-        spi_write(0xFF);
-    }
-    else if (GAME_STATE == FAIL)
-    {
-        if ((elapsed_time % 2) == 1)
-        {
-            spi_write(0b0000001);
-        }
-        else
-        {
-            spi_write(0b0000001 | (0x01 << 7));
-        }
-    }
-    else if (GAME_STATE == SUCCESS)
-    {
-        if ((elapsed_time % 2) == 1)
-        {
-            spi_write(0b0000000);
-        }
-        else
-        {
-            spi_write(0b0000000 | (0x01 << 7));
-        }
-    }
-    else
-    {
-        switch (NOTE)
-        {
-        case EHIGH:
-            spi_write(0b0111110 | (0x01 << 7));
-            break;
-        case CSHARP:
-            spi_write(0b1101011 | (0x01 << 7));
-            break;
-        case A:
-            spi_write(0b0111110);
-            break;
-        case ELOW:
-            spi_write(0b1101011);
-            break;
-        }
-    }
     TCB0.INTFLAGS = TCB_CAPT_bm;
 }
 ISR(TCB1_INT_vect)

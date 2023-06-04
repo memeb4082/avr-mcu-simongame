@@ -5,28 +5,27 @@
 #define PB2 PIN5_bm
 #define PB3 PIN6_bm
 #define PB4 PIN7_bm
-#define E_HIGH 338
-#define C_SHARP 284
-#define A_MIDDLE 451
-#define E_LOW 169
+#define EHIGH 338
+#define CSHARP 284
+#define A 451
+#define ELOW 169
 #define OCTAVES 4
 #define BR 9600
 #define MASK 0xE2023CAB
 typedef enum
 {
     START,
-    PLAYING_TONE,
-    DISPLAY_SEG,
-    AWAITING_SEQUENCE,
+    PLAY_TONE,
+    SHOW_SEG,
+    USER_INPUT,
     SUCCESS,
     FAIL,
-    FINISH
+    FINISH,
     // TODO: Figure out all the states and shii
 } state;
 
 typedef enum
 {
-    INIT,
     S1,
     S2,
     S3,
@@ -39,16 +38,13 @@ typedef enum
 
 typedef enum
 {
-    EHIGH,
-    CSHARP,
-    A,
-    ELOW
-} note;
+    PLAY,
+    PAUSE
+} buzzer_state;
 
 struct user
 {
     uint8_t score;
     char *name;
 };
-
 #endif

@@ -4,48 +4,22 @@
 #include <variables.h>
 
 extern volatile int8_t octave;
-extern volatile note NOTE;
+extern volatile uint16_t NOTE;
+extern volatile buzzer_state BUZZER;
 /*
 Handles buzzer tone playback of different tones at different octaves
 */
 void play_tone()
 {
+    BUZZER = PLAY;
     // switch case handles which note to playback
     if (octave >= 0)
     {
-        switch (NOTE)
-        {
-        case EHIGH:
-            TCA0.SINGLE.PERBUF = (int)(F_CPU / E_HIGH) >> (octave);
-            break;
-        case CSHARP:
-            TCA0.SINGLE.PERBUF = (int)(F_CPU / C_SHARP) >> (octave);
-            break;
-        case A:
-            TCA0.SINGLE.PERBUF = (int)(F_CPU / A_MIDDLE) >> (octave);
-            break;
-        case ELOW:
-            TCA0.SINGLE.PERBUF = (int)(F_CPU / E_LOW) >> (octave);
-            break;
-        }
+        TCA0.SINGLE.PERBUF = (int)(F_CPU / NOTE) >> (octave);
     }
     else
     {
-        switch (NOTE)
-        {
-        case EHIGH:
-            TCA0.SINGLE.PERBUF = (int)(F_CPU / E_HIGH) << (-octave);
-            break;
-        case CSHARP:
-            TCA0.SINGLE.PERBUF = (int)(F_CPU / C_SHARP) << (-octave);
-            break;
-        case A:
-            TCA0.SINGLE.PERBUF = (int)(F_CPU / A_MIDDLE) << (-octave);
-            break;
-        case ELOW:
-            TCA0.SINGLE.PERBUF = (int)(F_CPU / E_LOW) << (-octave);
-            break;
-        }
+        TCA0.SINGLE.PERBUF = (int)(F_CPU / NOTE) << (-octave);
     }
     // TODO: up the duty cycle, set to lower value so i dont destroy my fucking ears
     TCA0.SINGLE.CMP0BUF = TCA0.SINGLE.PERBUF >> 1;
@@ -55,5 +29,6 @@ Clears CMP0BUF on TCA0 to stop buzzer playback
 */
 void stop_tone()
 {
+    BUZZER = PAUSE;
     TCA0.SINGLE.CMP0BUF = 0;
 }

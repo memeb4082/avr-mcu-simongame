@@ -44,60 +44,39 @@ ISR(USART0_RXC_vect)
 {
     char rx_data = USART0.RXDATAL;
     USART0.TXDATAL = rx_data;
-    if (GAME_STATE == AWAITING_SEQUENCE)
+    switch (rx_data)
     {
-        switch (rx_data)
-        {
-        case '1':
-        case 'q':
-            INPUT = S1;
-            break;
-        case '2':
-        case 'w':
-            INPUT = S2;
-            break;
-        case '3':
-        case 'e':
-            INPUT = S3;
-            break;
-        case '4':
-        case 'r':
-            INPUT = S4;
-            break;
-        case ',':
-        case 'k':
-            INPUT = INC_FREQ;
-            break;
-        case '.':
-        case 'l':
-            INPUT = DEC_FREQ;
-            break;
-        case '0':
-        case 'p':
-            INPUT = RESET;
-            break;
-        case '9':
-        case 'o':
-            INPUT = SEED;
-            break;
-        }
-    }
-    else
-    {
-        switch (rx_data)
-        {
-        case ',':
-        case 'k':
-            INPUT = INC_FREQ;
-            break;
-        case '.':
-        case 'l':
-            INPUT = DEC_FREQ;
-            break;
-        case '0':
-        case 'p':
-            INPUT = RESET;
-            break;
-        }
+    case '1':
+    case 'q':
+        INPUT = S1;
+        break;
+    case '2':
+    case 'w':
+        INPUT = S2;
+        break;
+    case '3':
+    case 'e':
+        INPUT = S3;
+        break;
+    case '4':
+    case 'r':
+        INPUT = S4;
+        break;
+    case ',':
+    case 'k':
+        octave++;
+        break;
+    case '.':
+    case 'l':
+        octave--;
+        break;
+    case '0':
+    case 'p':
+        INPUT = RESET;
+        break;
+    case '9':
+    case 'o':
+        INPUT = SEED;
+        break;
     }
 }

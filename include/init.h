@@ -35,11 +35,7 @@ void pwm_init()
 	TODO: make function for rounding or use standard library maybe
 	*/
 	// TCA0.SINGLE.PER = (((F_CPU / E_HIGH) >= 0) ? (int)((F_CPU / E_HIGH) + 0.5) : (int)((F_CPU / E_HIGH) - 0.5)) >> (octave);
-	/*
-	0% duty cycle
-	[] add the rounding stuff ig
-	*/
-	// TCA0.SINGLE.CMP0 = 0;
+	TCA0.SINGLE.CMP0 = 0;
 	// Enable TCA0
 	TCA0.SINGLE.CTRLA = TCA_SINGLE_ENABLE_bm;
 }

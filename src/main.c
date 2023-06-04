@@ -10,41 +10,56 @@
 #include <spi.h>
 #include <uart.h>
 // number of rounds initially accounted for, will change later
+
 #define R_COUNT 10
 // TODO: check if seed vars are right ig, cause autograder fucked up (worked, bad)
 uint32_t STATE_LFSR = 0x11230851;
-volatile note NOTE;
+volatile uint16_t NOTE;
 volatile uint8_t pb_released = 0;
 volatile int8_t octave = -OCTAVES;
-volatile state GAME_STATE = START;
-volatile input_state INPUT = INIT;
+// volatile input_state INPUT = INIT;
 volatile uint32_t STATE;
 volatile uint8_t score;
-volatile uint32_t level = 2;
+volatile uint32_t level = 11;
 volatile uint16_t delay;
 volatile int8_t STEP;
 extern volatile uint16_t playback_time;
+// Thingy to store spi out for numbers
+int8_t segs[10] = {
+    0b0001000,
+    0b1101011,
+    0b1000100,
+    0b1000001,
+    0b0100011,
+    0b0010001,
+    0b0010000,
+    0b1001011,
+    0b0000000,
+    0b0000001};
+int8_t *SEQUENCE;       // pointer fuckery
+int8_t *INPUT_SEQUENCE; // seperate thing for user input to match later
+// Stores SPI thingo
+uint8_t spi;
+// Stores index of sequence, i.e., size and shit ig
+uint32_t idx = 0;
+// Stores index of user input
+uint32_t u_idx = 0;
+// states
+volatile state GAME_STATE = START;
+volatile buzzer_state BUZZER = PAUSE;
+volatile input_state INPUT;
 int main()
 {
     init();
     // Clear DISP
     spi_write(0xFF);
-    // // PB State
-    // uint8_t pb_prev = 0xFF;
-    // uint8_t pb_state_n = 0xFF;
-    // uint8_t pb_falling, pb_rising;
     // Push button states
     uint8_t pb_previous_state = 0xFF;
     uint8_t pb_new_state = 0xFF;
     uint8_t pb_falling_edge, pb_rising_edge;
-
-    int8_t *SEQUENCE;       // pointer fuckery
-    int8_t *INPUT_SEQUENCE; // seperate thing for user input to match later
-    // Stores index of sequence, i.e., size and shit ig
-    uint32_t idx = 0;
-    // Stores index of user input
-    uint32_t u_idx = 0;
-
+    uint8_t tens = 0;
+    uint8_t ones = 0;
+    spi_write(0xFF);
     while (1)
     {
         /*
@@ -54,172 +69,147 @@ int main()
         TODO: Switch to ISR maybe
         */
         delay = (((175 * ((ADC0.RESULT))) >> 16) + 25) * 10;
-        // // pb_new = pb_state; // Sample current PB state
-        // // // If multiple pushbuttons are on a single port, transitions for all
-        // // // pushbuttons can be calculated in parallel using bitwise operations
-        // // // Prev debounced state
-        // // // Compare edge and new/prev states
-        // // pb_falling = (pb_prev ^ pb_new) & ~pb_prev;
-        // // pb_rising = (pb_state ^ pb_new) & pb_new;
-        // pb_prev = pb_state_n;    // Register previous PB state
-        // pb_state_n = pb_state; // Sample current PB state
-        // // If multiple pushbuttons are on a single port, transitions for all
-        // // pushbuttons can be calculated in parallel using bitwise operations
-        // pb_falling = (pb_prev ^ pb_state_n) & ~pb_prev;
-        // pb_rising = (pb_prev ^ pb_state_n) & pb_state_n;
-        // Previous debounced state
+        // delay = 200;
+        /*
+        If multiple pushbuttons are on a single port, transitions for all
+        pushbuttons can be calculated in parallel using bitwise operations
+        Prev debounced state
+        Compare edge and new/prev states
+        If multiple pushbuttons are on a single port, transitions for all
+        pushbuttons can be calculated in parallel using bitwise operations
+        Previous debounced state
+         */
         pb_previous_state = pb_new_state;
         pb_new_state = pb_state;
-
         // Compare edge & prev/new state
         pb_falling_edge = (pb_previous_state ^ pb_new_state) & pb_previous_state;
         pb_rising_edge = (pb_previous_state ^ pb_new_state) & pb_new_state;
-        /*----------------------------INPUTSTATE-----------------------------*/
-        switch (INPUT)
-        {
-        case INIT:
-            break;
-        case INC_FREQ:
-            if (octave < OCTAVES)
-                octave++;
-            INPUT = INIT;
-            break;
-        case DEC_FREQ:
-            if (octave > -OCTAVES)
-                octave--;
-            INPUT = INIT;
-            break;
-        case RESET:
-            octave = 0;
-            level = 0;
-            INPUT = INIT;
-            // TODO: add more stuff to reset
-            break;
-        case SEED:
-            STATE_LFSR = next_step(&STATE_LFSR);
-            INPUT = INIT;
-            break;
-        default:
-            break;
-        }
-        if (pb_falling_edge & PB1)
-        {
-            INPUT = S1;
-        }
-        else if (pb_falling_edge & PB2)
-        {
-            INPUT = S2;
-        }
-        else if (pb_falling_edge & PB3)
-        {
-            INPUT = S3;
-        }
-        else if (pb_falling_edge & PB4)
-        {
-            INPUT = S4;
-        }
-        /*----------------------------GAME STATE-----------------------------*/
+        /*-------------------------------------------------------------------------*/
         switch (GAME_STATE)
         {
-        case START:
-            elapsed_time = 0;
-            STEP = next_step(&STATE_LFSR);
 
-            switch (STEP)
+        case START:
+            if (idx == level)
             {
-            case 0b00:
-                NOTE = EHIGH;
-                GAME_STATE = PLAYING_TONE;
-                sqc_append(&SEQUENCE, &idx, 1);
-                break;
-            case 0b01:
-                NOTE = CSHARP;
-                GAME_STATE = PLAYING_TONE;
-                sqc_append(&SEQUENCE, &idx, 2);
-                break;
-            case 0b10:
-                NOTE = A;
-                GAME_STATE = PLAYING_TONE;
-                sqc_append(&SEQUENCE, &idx, 3);
-                break;
-            case 0b11:
-                NOTE = ELOW;
-                GAME_STATE = PLAYING_TONE;
-                sqc_append(&SEQUENCE, &idx, 4);
-                break;
-            default:
-                break;
+                stop_tone(); // stop residual tones
+                spi = 0xFF;
+                GAME_STATE = USER_INPUT;
             }
-            play_tone();
+            else
+            {
+                elapsed_time = 0; // set the time to 0
+                GAME_STATE = PLAY_TONE;
+                STEP = next_step(&STATE_LFSR); // new step variable
+                switch (STEP)
+                {
+                case 1:
+                    NOTE = EHIGH;
+                    sqc_append(&SEQUENCE, &idx, 0);
+                    spi = 0b0111110 | (0x01 << 7);
+                    break;
+                case 2:
+                    NOTE = CSHARP;
+                    sqc_append(&SEQUENCE, &idx, 1);
+                    spi = 0b1101011 | (0x01 << 7);
+                    break;
+                case 3:
+                    NOTE = A;
+                    sqc_append(&SEQUENCE, &idx, 2);
+                    spi = 0b0111110;
+                    break;
+                case 4:
+                    NOTE = ELOW;
+                    sqc_append(&SEQUENCE, &idx, 3);
+                    spi = 0b1101011;
+                    break;
+                }
+            }
             break;
-        case PLAYING_TONE:
+        case PLAY_TONE:
+            // stop at half delay
+            spi_write(0xFF); // clear DISP
             if (elapsed_time >= (delay >> 1))
             {
                 stop_tone();
-                GAME_STATE = DISPLAY_SEG;
+                GAME_STATE = SHOW_SEG;
             }
-        case DISPLAY_SEG:
-            if ((elapsed_time >= delay) & (idx == level))
+            else if (BUZZER == PAUSE)
             {
-                stop_tone();
-                spi_write(0xFF);
-                GAME_STATE = AWAITING_SEQUENCE;
+                play_tone();
             }
-            else if (elapsed_time >= delay)
+            break;
+        case SHOW_SEG:
+            if (elapsed_time >= delay)
             {
                 GAME_STATE = START;
             }
+            spi_write(spi);
             break;
-        case AWAITING_SEQUENCE:
-
-            switch (INPUT)
+        case USER_INPUT:
+            // PB Stuff
+            spi_write(spi);
+            switch (BUZZER)
             {
-            case INIT:
+            case PLAY:
+                if (!pb_released)
+                {
+                    if (pb_rising_edge & (PB1 | PB2 | PB3 | PB4))
+                    {
+                        pb_released = 1;
+                    }
+                }
+                else if (elapsed_time >= delay)
+                {
+                    allow_updating_playback_delay = 1;
+                    spi = 0xFF;
+                    stop_tone();
+                }
                 break;
-            case S1:
-                NOTE = EHIGH;
-                INPUT = INIT;
-                elapsed_time = 0;
-                sqc_append(&INPUT_SEQUENCE, &u_idx, 1);
-                uart_putc('a');
-                // STATE = Pl
-                break;
-            case S2:
-                NOTE = CSHARP;
-                INPUT = INIT;
-                elapsed_time = 0;
-                sqc_append(&INPUT_SEQUENCE, &u_idx, 2);
-                uart_putc('b');
-                // STATE = Pl
-                break;
-            case S3:
-                NOTE = A;
-                INPUT = INIT;
-                elapsed_time = 0;
-                sqc_append(&INPUT_SEQUENCE, &u_idx, 3);
-                uart_putc('c');
-                // STATE = Pl
-                break;
-            case S4:
-                NOTE = ELOW;
-                INPUT = INIT;
-                elapsed_time = 0;
-                sqc_append(&INPUT_SEQUENCE, &u_idx, 4);
-                uart_putc('d');
-                // STATE = Pl
-                break;
-            default:
+            case PAUSE:
+                if (pb_falling_edge & PB1)
+                {
+                    NOTE = EHIGH;
+                    play_tone();
+                    pb_released = 0;
+                    elapsed_time = 0;
+                    spi = 0b0111110 | (0x01 << 7);
+                    sqc_append(&INPUT_SEQUENCE, &u_idx, 0);
+                }
+                else if (pb_falling_edge & PB2)
+                {
+                    NOTE = CSHARP;
+                    play_tone();
+                    pb_released = 0;
+                    elapsed_time = 0;
+                    spi = 0b1101011 | (0x01 << 7);
+                    sqc_append(&INPUT_SEQUENCE, &u_idx, 1);
+                }
+                else if (pb_falling_edge & PB3)
+                {
+                    NOTE = A;
+                    play_tone();
+                    pb_released = 0;
+                    elapsed_time = 0;
+                    spi = 0b0111110;
+                    sqc_append(&INPUT_SEQUENCE, &u_idx, 2);
+                }
+                else if (pb_falling_edge & PB4)
+                {
+                    NOTE = ELOW;
+                    play_tone();
+                    pb_released = 0;
+                    elapsed_time = 0;
+                    spi = 0b1101011;
+                    sqc_append(&INPUT_SEQUENCE, &u_idx, 3);
+                }
                 break;
             }
-            if (u_idx == 0)
-                uart_putc('2');
-            if (idx == u_idx)
+            if (idx == u_idx && (pb_released & (elapsed_time >= delay)))
             {
-                if (assert_equal(SEQUENCE, INPUT_SEQUENCE, idx) == 0)
-                {
-                    GAME_STATE = FAIL;
-                }
-                else
+                elapsed_time = 0;
+                stop_tone();
+                GAME_STATE = FAIL;
+                if (assert_equal(SEQUENCE, INPUT_SEQUENCE, idx) == 1) // long if statement to prevent stopping note mid playback
                 {
                     GAME_STATE = SUCCESS;
                 }
@@ -228,22 +218,63 @@ int main()
         case SUCCESS:
             if (elapsed_time >= delay)
             {
-                // GAME_STATE = START;
-                idx = 0;
-                u_idx = 0;
-                level++;
+                elapsed_time = 0;
+                GAME_STATE = FINISH;
+            }
+            else
+            {
+                if ((elapsed_time % 2) == 1)
+                {
+                    spi_write(0b0000000);
+                }
+                else
+                {
+                    spi_write(0b0000000 | (0x01 << 7));
+                }
             }
             break;
+
         case FAIL:
-            idx = 0;
-            u_idx = 0;
-            level = 1;
-            // GAME_STATE = START;
+            if (elapsed_time < delay)
+            {
+                elapsed_time = 0;
+                GAME_STATE = FINISH;
+            }
+            else
+            {
+                if ((elapsed_time % 2) == 1)
+                {
+                    spi_write(0b0000001);
+                }
+                else
+                {
+                    spi_write(0b0000001 | (0x01 << 7));
+                }
+            }
             break;
         case FINISH:
-            // play_tone();
+            if (ones == 0)
+            {
+                level %= 100;
+                ones = level % 10;
+                while (level > 10)
+                {
+                    level -= 10;
+                    tens++;
+                }
+            }
+            else
+            {
+                if ((elapsed_time % 2) == 1)
+                {
+                    spi_write(segs[ones]);
+                }
+                else
+                {
+                    spi_write(segs[tens] | (0x01 << 7));
+                }
+            }
             break;
         }
-        /*-------------------------------------------------------------------*/
     }
 }
