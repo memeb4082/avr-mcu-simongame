@@ -9,18 +9,16 @@
 #include <timers.h>
 #include <spi.h>
 #include <uart.h>
-// number of rounds initially accounted for, will change later
-
-#define R_COUNT 10
 // TODO: check if seed vars are right ig, cause autograder fucked up (worked, bad)
-uint32_t STATE_LFSR = 0x11230851;
+uint32_t STATE_LFSR = LFSR_INIT;
+uint32_t LFSR_MATCH = LFSR_INIT;
 volatile uint16_t NOTE;
 volatile uint8_t pb_released = 0;
 volatile int8_t octave = -OCTAVES;
 // volatile input_state INPUT = INIT;
 volatile uint32_t STATE;
 volatile uint8_t score;
-volatile uint32_t level = 11;
+volatile uint32_t level = 3;
 volatile uint16_t delay;
 volatile int8_t STEP;
 extern volatile uint16_t playback_time;
@@ -40,11 +38,14 @@ int8_t *SEQUENCE;       // pointer fuckery
 int8_t *INPUT_SEQUENCE; // seperate thing for user input to match later
 // Stores SPI thingo
 uint8_t spi;
-// Stores index of sequence, i.e., size and shit ig
+// Stores index of playback and shii
 uint32_t idx = 0;
-// Stores index of user input
+// Stores index of user and shii
 uint32_t u_idx = 0;
-// states
+// Stores input of user and shii
+uint8_t input;
+// Bool var sorta
+uint8_t valid = 1;
 volatile state GAME_STATE = START;
 volatile buzzer_state BUZZER = PAUSE;
 volatile input_state INPUT;
@@ -104,25 +105,22 @@ int main()
                 {
                 case 1:
                     NOTE = EHIGH;
-                    sqc_append(&SEQUENCE, &idx, 0);
                     spi = 0b0111110 | (0x01 << 7);
                     break;
                 case 2:
                     NOTE = CSHARP;
-                    sqc_append(&SEQUENCE, &idx, 1);
                     spi = 0b1101011 | (0x01 << 7);
                     break;
                 case 3:
                     NOTE = A;
-                    sqc_append(&SEQUENCE, &idx, 2);
                     spi = 0b0111110;
                     break;
                 case 4:
                     NOTE = ELOW;
-                    sqc_append(&SEQUENCE, &idx, 3);
                     spi = 0b1101011;
                     break;
                 }
+                idx++;
             }
             break;
         case PLAY_TONE:
@@ -163,6 +161,17 @@ int main()
                     allow_updating_playback_delay = 1;
                     spi = 0xFF;
                     stop_tone();
+                    /* Match user input with sequence */
+                    if (next_step(&LFSR_MATCH) == input)
+                    {
+                        valid *= 1;
+                        uart_putc('p');
+                    }
+                    else
+                    {
+                        valid *= 0;
+                        uart_putc('f');
+                    }
                 }
                 break;
             case PAUSE:
@@ -170,37 +179,37 @@ int main()
                 {
                     NOTE = EHIGH;
                     play_tone();
-                    pb_released = 0;
-                    elapsed_time = 0;
+                    pb_released, elapsed_time = 0;
                     spi = 0b0111110 | (0x01 << 7);
-                    sqc_append(&INPUT_SEQUENCE, &u_idx, 0);
+                    input = 1;
+                    u_idx++;
                 }
                 else if (pb_falling_edge & PB2)
                 {
                     NOTE = CSHARP;
                     play_tone();
-                    pb_released = 0;
-                    elapsed_time = 0;
+                    pb_released, elapsed_time = 0;
                     spi = 0b1101011 | (0x01 << 7);
-                    sqc_append(&INPUT_SEQUENCE, &u_idx, 1);
+                    input = 2;
+                    u_idx++;
                 }
                 else if (pb_falling_edge & PB3)
                 {
                     NOTE = A;
                     play_tone();
-                    pb_released = 0;
-                    elapsed_time = 0;
+                    pb_released, elapsed_time = 0;
                     spi = 0b0111110;
-                    sqc_append(&INPUT_SEQUENCE, &u_idx, 2);
+                    input = 3;
+                    u_idx++;
                 }
                 else if (pb_falling_edge & PB4)
                 {
                     NOTE = ELOW;
                     play_tone();
-                    pb_released = 0;
-                    elapsed_time = 0;
+                    pb_released, elapsed_time = 0;
                     spi = 0b1101011;
-                    sqc_append(&INPUT_SEQUENCE, &u_idx, 3);
+                    input = 4;
+                    u_idx++;
                 }
                 break;
             }
@@ -209,7 +218,7 @@ int main()
                 elapsed_time = 0;
                 stop_tone();
                 GAME_STATE = FAIL;
-                if (assert_equal(SEQUENCE, INPUT_SEQUENCE, idx) == 1) // long if statement to prevent stopping note mid playback
+                if (valid == 1)
                 {
                     GAME_STATE = SUCCESS;
                 }
@@ -235,7 +244,7 @@ int main()
             break;
 
         case FAIL:
-            if (elapsed_time < delay)
+            if (elapsed_time >= delay)
             {
                 elapsed_time = 0;
                 GAME_STATE = FINISH;

@@ -12,6 +12,7 @@
 #define OCTAVES 4
 #define BR 9600
 #define MASK 0xE2023CAB
+#define LFSR_INIT 0x11230851
 typedef enum
 {
     START,
