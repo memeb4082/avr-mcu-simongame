@@ -2,10 +2,16 @@
 #include <variables.h>
 #include <avr/io.h>
 #include <avr/interrupt.h>
-
+#include <sequence.h>
 extern volatile uint8_t uart_in;
 extern volatile state GAME_STATE;
 extern volatile int8_t octave;
+extern volatile uint32_t STATE_LFSR;
+extern volatile uint32_t LFSR_MATCH;
+extern volatile uint8_t u_idx;
+extern volatile uint8_t idx;
+extern volatile uint8_t level;
+extern volatile int8_t STEP;
 // ------------------------  SERIAL PARSER  ------------------------
 uint8_t uart_getc(void)
 {
@@ -61,13 +67,16 @@ ISR(USART0_RXC_vect)
     case 'l':
         octave--;
         break;
-    // case '0':
-    // case 'p':
-    //     INPUT = RESET;
-    //     break;
-    // case '9':
-    // case 'o':
-    //     INPUT = SEED;
-    //     break;
+    case '0':
+    case 'p':
+        STATE_LFSR = LFSR_INIT;
+        LFSR_MATCH = LFSR_INIT;
+        u_idx = 0;
+        idx = 0;
+        break;
+    case '9':
+    case 'o':
+        STEP = next_step(&STATE_LFSR);
+        break;
     }
 }

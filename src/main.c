@@ -10,8 +10,8 @@
 #include <spi.h>
 #include <uart.h>
 // TODO: check if seed vars are right ig, cause autograder fucked up (worked, bad)
-uint32_t STATE_LFSR = LFSR_INIT;
-uint32_t LFSR_MATCH = LFSR_INIT;
+volatile uint32_t STATE_LFSR = LFSR_INIT;
+volatile uint32_t LFSR_MATCH = LFSR_INIT;
 volatile uint16_t NOTE;
 volatile uint8_t pb_released = 0;
 volatile int8_t octave = -OCTAVES;
@@ -36,9 +36,9 @@ int8_t segs[10] = {
 // Stores SPI thingo
 uint8_t spi;
 // Stores index of playback and shii
-uint32_t idx = 0;
+volatile uint32_t idx = 0;
 // Stores index of user and shii
-uint32_t u_idx = 0;
+volatile uint32_t u_idx = 0;
 // Stores input of user and shii
 uint8_t input;
 // Bool var sorta
