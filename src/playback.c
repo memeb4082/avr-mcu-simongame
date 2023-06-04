@@ -12,7 +12,6 @@ Handles buzzer tone playback of different tones at different octaves
 void play_tone()
 {
     BUZZER = PLAY;
-    // switch case handles which note to playback
     if (octave >= 0)
     {
         TCA0.SINGLE.PERBUF = (int)(F_CPU / NOTE) >> (octave);

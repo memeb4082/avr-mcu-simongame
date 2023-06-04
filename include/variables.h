@@ -27,18 +27,6 @@ typedef enum
 
 typedef enum
 {
-    S1,
-    S2,
-    S3,
-    S4,
-    INC_FREQ,
-    DEC_FREQ,
-    RESET,
-    SEED
-} input_state;
-
-typedef enum
-{
     PLAY,
     PAUSE
 } buzzer_state;

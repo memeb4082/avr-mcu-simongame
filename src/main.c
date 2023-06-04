@@ -15,10 +15,9 @@ uint32_t LFSR_MATCH = LFSR_INIT;
 volatile uint16_t NOTE;
 volatile uint8_t pb_released = 0;
 volatile int8_t octave = -OCTAVES;
-// volatile input_state INPUT = INIT;
 volatile uint32_t STATE;
 volatile uint8_t score;
-volatile uint32_t level = 3;
+volatile uint32_t level = 1;
 volatile uint16_t delay;
 volatile int8_t STEP;
 extern volatile uint16_t playback_time;
@@ -34,8 +33,6 @@ int8_t segs[10] = {
     0b1001011,
     0b0000000,
     0b0000001};
-int8_t *SEQUENCE;       // pointer fuckery
-int8_t *INPUT_SEQUENCE; // seperate thing for user input to match later
 // Stores SPI thingo
 uint8_t spi;
 // Stores index of playback and shii
@@ -48,7 +45,8 @@ uint8_t input;
 uint8_t valid = 1;
 volatile state GAME_STATE = START;
 volatile buzzer_state BUZZER = PAUSE;
-volatile input_state INPUT;
+// volatile input_state INPUT;
+volatile uint8_t uart_in;
 int main()
 {
     init();
@@ -70,7 +68,7 @@ int main()
         TODO: Switch to ISR maybe
         */
         delay = (((175 * ((ADC0.RESULT))) >> 16) + 25) * 10;
-        // delay = 200;
+        // delay = 1;
         /*
         If multiple pushbuttons are on a single port, transitions for all
         pushbuttons can be calculated in parallel using bitwise operations
@@ -151,31 +149,34 @@ int main()
             case PLAY:
                 if (!pb_released)
                 {
-                    if (pb_rising_edge & (PB1 | PB2 | PB3 | PB4))
+                    if ((pb_rising_edge & (PB1 | PB2 | PB3 | PB4)) | (uart_in > 0))
                     {
                         pb_released = 1;
                     }
                 }
                 else if (elapsed_time >= delay)
                 {
-                    allow_updating_playback_delay = 1;
                     spi = 0xFF;
+                    uart_in = 0;
                     stop_tone();
                     /* Match user input with sequence */
                     if (next_step(&LFSR_MATCH) == input)
                     {
                         valid *= 1;
-                        uart_putc('p');
                     }
                     else
                     {
                         valid *= 0;
-                        uart_putc('f');
                     }
                 }
                 break;
             case PAUSE:
-                if (pb_falling_edge & PB1)
+                // int cmp instead of str cmp, faster i think
+                /*
+                qwer -> 113 119 101 114
+                1234 ->  49  50  51  52
+                */
+                if ((pb_falling_edge & PB1) | uart_in == 1)
                 {
                     NOTE = EHIGH;
                     play_tone();
@@ -184,7 +185,7 @@ int main()
                     input = 1;
                     u_idx++;
                 }
-                else if (pb_falling_edge & PB2)
+                else if ((pb_falling_edge & PB2) | uart_in == 2)
                 {
                     NOTE = CSHARP;
                     play_tone();
@@ -193,7 +194,7 @@ int main()
                     input = 2;
                     u_idx++;
                 }
-                else if (pb_falling_edge & PB3)
+                else if ((pb_falling_edge & PB3) | uart_in == 3)
                 {
                     NOTE = A;
                     play_tone();
@@ -202,7 +203,7 @@ int main()
                     input = 3;
                     u_idx++;
                 }
-                else if (pb_falling_edge & PB4)
+                else if ((pb_falling_edge & PB4) | uart_in == 4)
                 {
                     NOTE = ELOW;
                     play_tone();
@@ -225,10 +226,16 @@ int main()
             }
             break;
         case SUCCESS:
+            uart_putc('s');
             if (elapsed_time >= delay)
             {
                 elapsed_time = 0;
-                GAME_STATE = FINISH;
+                GAME_STATE = START;
+                STATE_LFSR = LFSR_INIT;
+                LFSR_MATCH = LFSR_INIT;
+                u_idx = 0;
+                idx = 0;
+                level++;
             }
             else
             {
@@ -242,8 +249,8 @@ int main()
                 }
             }
             break;
-
         case FAIL:
+            uart_putc('f');
             if (elapsed_time >= delay)
             {
                 elapsed_time = 0;

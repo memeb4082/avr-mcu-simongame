@@ -4,7 +4,6 @@
 #include <stdint.h>
 #include <variables.h>
 
-extern volatile input_state INPUT;
 extern volatile int8_t octave;
 
 uint8_t uart_getc(void);
