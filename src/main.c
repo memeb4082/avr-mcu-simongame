@@ -45,8 +45,9 @@ uint8_t input;
 uint8_t valid = 1;
 volatile state GAME_STATE = START;
 volatile buzzer_state BUZZER = PAUSE;
-// volatile input_state INPUT;
 volatile uint8_t uart_in;
+volatile char name[4];
+volatile uint8_t len;
 int main()
 {
     init();
@@ -230,16 +231,15 @@ int main()
             }
             break;
         case SUCCESS:
-            uart_putc('s');
             if (elapsed_time >= delay)
             {
                 elapsed_time = 0;
-                GAME_STATE = START;
                 STATE_LFSR = LFSR_INIT;
                 LFSR_MATCH = LFSR_INIT;
                 u_idx = 0;
                 idx = 0;
                 level++;
+                GAME_STATE = START;
             }
             else
             {
@@ -254,11 +254,10 @@ int main()
             }
             break;
         case FAIL:
-            uart_putc('f');
             if (elapsed_time >= delay)
             {
                 elapsed_time = 0;
-                GAME_STATE = FINISH;
+                GAME_STATE = DISP_SCORE;
             }
             else
             {
@@ -272,28 +271,49 @@ int main()
                 }
             }
             break;
-        case FINISH:
-            if (ones == 0)
+        case DISP_SCORE:
+            level %= 100;
+            ones = level % 10;
+            while (level > 10)
             {
-                level %= 100;
-                ones = level % 10;
-                while (level > 10)
-                {
-                    level -= 10;
-                    tens++;
-                }
+                level -= 10;
+                tens++;
+            }
+            if ((elapsed_time % 2) == 1)
+            {
+                spi_write(segs[ones]);
             }
             else
             {
-                if ((elapsed_time % 2) == 1)
-                {
-                    spi_write(segs[ones]);
-                }
-                else
-                {
-                    spi_write(segs[tens] | (0x01 << 7));
-                }
+                spi_write(segs[tens] | (0x01 << 7));
             }
+            if (elapsed_time >= delay)
+            {
+                uart_puts("Enter name:");
+                GAME_STATE = NAME_INPUT;
+            }
+            // TODO: move vars to top maybe
+            break;
+        case NAME_INPUT:
+            if ((elapsed_time % 2) == 1)
+            {
+                spi_write(segs[ones]);
+            }
+            else
+            {
+                spi_write(segs[tens] | (0x01 << 7));
+            }
+            break;
+        case UART_SCORE:
+            uart_puts("\n Your score ");
+            uart_puts(name);
+            uart_puts(" is ");
+            uart_putc(level + 48); // make this work up 65535
+            GAME_STATE = FINISH;
+            break;
+        case RANKINGS:
+            break;
+        case FINISH:
             break;
         }
     }

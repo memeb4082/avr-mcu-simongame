@@ -8,10 +8,12 @@ extern volatile state GAME_STATE;
 extern volatile int8_t octave;
 extern volatile uint32_t STATE_LFSR;
 extern volatile uint32_t LFSR_MATCH;
-extern volatile uint8_t u_idx;
-extern volatile uint8_t idx;
+extern volatile uint32_t u_idx;
+extern volatile uint32_t idx;
 extern volatile uint8_t level;
 extern volatile int8_t STEP;
+extern volatile char name[4];
+extern volatile uint8_t len;
 // ------------------------  SERIAL PARSER  ------------------------
 uint8_t uart_getc(void)
 {
@@ -19,7 +21,6 @@ uint8_t uart_getc(void)
         ; // Wait for data
     return USART0.RXDATAL;
 }
-
 void uart_putc(uint8_t c)
 {
     while (!(USART0.STATUS & USART_DREIF_bm))
@@ -41,42 +42,58 @@ ISR(USART0_RXC_vect)
 {
     char rx_data = USART0.RXDATAL;
     USART0.TXDATAL = rx_data;
-    switch (rx_data)
+    switch (GAME_STATE)
     {
-    case '1':
-    case 'q':
-        uart_in = 1;
+    case USER_INPUT:
+        switch (rx_data)
+        {
+        case '1':
+        case 'q':
+            uart_in = 1;
+            break;
+        case '2':
+        case 'w':
+            uart_in = 2;
+            break;
+        case '3':
+        case 'e':
+            uart_in = 3;
+            break;
+        case '4':
+        case 'r':
+            uart_in = 4;
+            break;
+        case ',':
+        case 'k':
+            octave++;
+            break;
+        case '.':
+        case 'l':
+            octave--;
+            break;
+        case '0':
+        case 'p':
+            STATE_LFSR = LFSR_INIT;
+            LFSR_MATCH = LFSR_INIT;
+            u_idx = 0;
+            idx = 0;
+            break;
+        case '9':
+        case 'o':
+            STEP = next_step(&STATE_LFSR);
+            break;
+        }
         break;
-    case '2':
-    case 'w':
-        uart_in = 2;
-        break;
-    case '3':
-    case 'e':
-        uart_in = 3;
-        break;
-    case '4':
-    case 'r':
-        uart_in = 4;
-        break;
-    case ',':
-    case 'k':
-        octave++;
-        break;
-    case '.':
-    case 'l':
-        octave--;
-        break;
-    case '0':
-    case 'p':
-        STATE_LFSR = LFSR_INIT;
-        LFSR_MATCH = LFSR_INIT;
-        u_idx = 0;
-        idx = 0;
-        break;
-    case '9':
-    case 'o':
-        STEP = next_step(&STATE_LFSR);
-        break;
+    case NAME_INPUT:
+        if (rx_data != '\n')
+        {
+            name[len] = rx_data;
+            len++;
+        }
+        else
+        {
+            name[len] = '\0';
+            GAME_STATE = UART_SCORE;
+        }
     }
 }

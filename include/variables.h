@@ -21,7 +21,11 @@ typedef enum
     USER_INPUT,
     SUCCESS,
     FAIL,
-    FINISH,
+    DISP_SCORE,
+    NAME_INPUT,
+    UART_SCORE,
+    RANKINGS,
+    FINISH
     // TODO: Figure out all the states and shii
 } state;
 
