@@ -13,9 +13,42 @@ extern volatile uint32_t u_idx;
 extern volatile uint32_t idx;
 extern volatile uint8_t level;
 extern volatile int8_t STEP;
-extern volatile char name[4];
+// extern volatile char name[4];
 extern volatile uint8_t len;
 extern volatile buzzer_state BUZZER;
+
+char *c;
+uint8_t i;
+
+uint32_t stringToHex(const char *str)
+{
+    unsigned int hex = 0;
+
+    for (int i = 0; i < 8; i++)
+    {
+        hex <<= 4; // Shift the existing bits left by 4 positions
+
+        if (str[i] >= '0' && str[i] <= '9')
+        {
+            hex |= (str[i] - '0'); // Convert numeric characters to hexadecimal value
+        }
+        else if (str[i] >= 'A' && str[i] <= 'F')
+        {
+            hex |= (str[i] - 'A' + 10); // Convert uppercase alphabets to hexadecimal value
+        }
+        else if (str[i] >= 'a' && str[i] <= 'f')
+        {
+            hex |= (str[i] - 'a' + 10); // Convert lowercase alphabets to hexadecimal value
+        }
+        else
+        {
+            printf("Invalid character: %c\n", str[i]);
+            return 0;
+        }
+    }
+
+    return hex;
+}
 // ------------------------  SERIAL PARSER  ------------------------
 uint8_t uart_getc(void)
 {
@@ -83,18 +116,26 @@ ISR(USART0_RXC_vect)
             break;
         case ',':
         case 'k':
-            if (octave < OCTAVES_MAX) octave++;
+            if (octave < OCTAVES_MAX)
+                octave++;
             printf("%d", TCA0.SINGLE.PERBUF);
             break;
         case '.':
         case 'l':
-            if (octave > OCTAVES_MIN) octave--;
+            if (octave > OCTAVES_MIN)
+                octave--;
             printf("%d", TCA0.SINGLE.PERBUF);
             break;
         case '0':
         case 'p':
-            STATE_LFSR = LFSR_INIT;
-            LFSR_MATCH = LFSR_INIT;
+            i = 0;
+            while (i < 8)
+            {
+                c[0] = uart_getc();
+                i++;
+            }
+            STATE_LFSR = stringToHex(c);
+            LFSR_MATCH = STATE_LFSR;
             u_idx = 0;
             idx = 0;
             break;
@@ -107,12 +148,12 @@ ISR(USART0_RXC_vect)
     case NAME_INPUT:
         if (rx_data != '\n')
         {
-            name[len] = rx_data;
+            // name[len] = rx_data;
             len++;
         }
         else
         {
-            name[len] = '\0';
+            // name[len] = '\0';
             GAME_STATE = UART_SCORE;
         }
     }
