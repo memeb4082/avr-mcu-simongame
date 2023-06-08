@@ -12,8 +12,6 @@
 // TODO: check if seed vars are right ig, cause autograder fucked up (worked, bad)
 uint32_t STATE_LFSR = LFSR_INIT;
 volatile uint32_t LFSR_MATCH = LFSR_INIT;
-// TODO: see if best way to do this
-volatile uint32_t RESET_LFSR;
 volatile uint16_t NOTE;
 volatile uint8_t pb_released = 0;
 volatile int8_t octave = 0;
@@ -42,6 +40,8 @@ volatile uint32_t idx = 0;
 volatile uint32_t u_idx = 0;
 // Stores input of user and shii
 uint8_t input;
+// Bool var sorta
+uint8_t valid = 1;
 volatile state GAME_STATE = START;
 volatile state PREV;
 volatile buzzer_state BUZZER = PAUSE;
@@ -91,23 +91,13 @@ int main()
         /*-------------------------------------------------------------------------*/
         switch (GAME_STATE)
         {
-        case RESET:
-            STATE_LFSR = LFSR_INIT;
-            LFSR_MATCH = STATE_LFSR;
-            level = 1;
-            idx = 0;
-            u_idx = 0;
-            GAME_STATE = START;
-            break;
+
         case START:
-            if (PREV == NEW_STATE)
-                PREV = START;
+            printf("Level is %d\n", level);
             if (idx == level)
             {
                 stop_tone(); // stop residual tones
                 spi = 0xFF;
-                printf("New level: ");
-                printf("%0d\n", level);
                 GAME_STATE = USER_INPUT;
             }
             else
@@ -125,22 +115,18 @@ int main()
                 case 1:
                     NOTE = EHIGH;
                     spi = 0b0111110 | (0x01 << 7);
-                    printf("1");
                     break;
                 case 2:
                     NOTE = CSHARP;
                     spi = 0b1101011 | (0x01 << 7);
-                    printf("2");
                     break;
                 case 3:
                     NOTE = A;
                     spi = 0b0111110;
-                    printf("3");
                     break;
                 case 4:
                     NOTE = ELOW;
                     spi = 0b1101011;
-                    printf("4");
                     break;
                 }
                 idx++;
@@ -166,27 +152,6 @@ int main()
             }
             spi_write(spi);
             break;
-        case NEW_STATE:
-            while (i != 8)
-            {
-                tmp = uart_getc();
-                if (tmp != '\0')
-                {
-                    // Massive fuckup bitmask shit to get nth bitmask hope it works it defo wont lol
-                    // TODO: check for cleaner way 
-                    STATE_LFSR = (STATE_LFSR) & ~(SHIFT_MASK << (4 * i)) | hexchar_to_int(tmp) << (4 * i);
-                    i++;
-                }
-            }
-            if (i == 8)
-            {
-                i = 0;
-                printf("0x%08x\n", STATE_LFSR);
-                printf("0x%08x\n", LFSR_MATCH);
-                PREV = NEW_STATE;
-                GAME_STATE = START;
-            }
-            break;
         case USER_INPUT:
             // PB Stuff
             spi_write(spi);
@@ -207,15 +172,26 @@ int main()
                     uart_in = 0;
                     elapsed_time = 0;
                     stop_tone();
+                    // printf("%d\n", input);
+                    // printf("FUCK");
+                    /* Match user input with sequence */
                     if (next_step(&LFSR_MATCH) == input)
                     {
-                        if (u_idx == level)
+                        // printf("Passed\n");
+                        valid *= 1;
+                        if ((u_idx == level) & (valid == 1))
                         {
                             GAME_STATE = SUCCESS;
+                        }
+                        else if (valid == 0)
+                        {
+                            GAME_STATE = FAIL;
                         }
                     }
                     else
                     {
+                        // printf("Failed\n");
+                        valid *= 0;
                         GAME_STATE = FAIL;
                     }
                 }
@@ -274,16 +250,8 @@ int main()
             if (elapsed_time >= delay)
             {
                 elapsed_time = 0;
-                if (RESET_LFSR)
-                {
-                    STATE_LFSR = RESET_LFSR;
-                    LFSR_MATCH = RESET_LFSR;
-                }
-                else
-                {
-                    STATE_LFSR = LFSR_INIT;
-                    LFSR_MATCH = LFSR_INIT;
-                }
+                STATE_LFSR = LFSR_INIT;
+                LFSR_MATCH = LFSR_INIT;
                 u_idx = 0;
                 idx = 0;
                 level++;
@@ -306,8 +274,15 @@ int main()
             if (elapsed_time >= delay)
             {
                 elapsed_time = 0;
-                RESET_LFSR = STATE_LFSR;
-                GAME_STATE = DISP_SCORE;
+                // sequence_fail(&STATE_LFSR);
+                // LFSR_MATCH = LFSR_INIT;
+                LFSR_MATCH = STATE_LFSR; // set to match final press thingy
+                u_idx = 0;
+                idx = 0;
+                valid = 1;
+                printf("%" PRIx32 "\n", STATE_LFSR);
+                printf("%" PRIx32 "\n", LFSR_MATCH);
+                GAME_STATE = START;
             }
             else
             {
@@ -337,24 +312,13 @@ int main()
             {
                 spi_write(segs[tens] | (0x01 << 7));
             }
-            if (elapsed_time >= WAIT_FAIL)
-            {
-                u_idx = 0;
-                idx = 0;
-                GAME_STATE = START;
-                printf("0x%08x\n", STATE_LFSR);
-                printf("0x%08x\n", LFSR_MATCH);
-                // GAME_STATE = NAME_INPUT;
-            }
             // TODO: move vars to top maybe
             break;
         case UART_SCORE:
             uart_putc(level + 48);
             GAME_STATE = FINISH;
             break;
-        case RANKINGS:
-            break;
-        case FINISH:
+        default:
             break;
         }
     }

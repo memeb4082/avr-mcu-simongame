@@ -28,7 +28,7 @@ typedef enum
     UART_SCORE,
     RANKINGS,
     FINISH,
-    RESET
+    RESET,
     // TODO: Figure out all the states and shii
 } state;
 

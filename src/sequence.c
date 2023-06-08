@@ -1,5 +1,6 @@
 #include <sequence.h>
 #include <stdlib.h>
+#include <uart.h>
 /*
 Pseudorandom number generator to generate seed for gameplay
 @param *state pointer to state variable
@@ -17,4 +18,12 @@ uint8_t next_step(uint32_t *state)
     uint8_t STEP = STATE_LFSR & 0b11;
     *state = STATE_LFSR;
     return STEP;
+}
+void seed(uint32_t *state, char* s)
+{
+    uint32_t STATE_LFSR = *state;
+    for (int i = 0; i < 8; i++)
+    {
+        STATE_LFSR = (STATE_LFSR & ~(0xFF << (i * 4))) | (s[i] << i);
+    }
 }
