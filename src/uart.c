@@ -142,42 +142,27 @@ ISR(USART0_RXC_vect)
                 break;
             case '0':
             case 'p':
-                // printf("\nBALLS");
-                // while (i < 8)
-                // {
-                //     tmp = uart_getc();
-                //     if (tmp != '\0')
-                //     {
-                //         c[i] = uart_getc();
-                //         i++;
-                //     }
-                // }
-                // sscanf(c, "%x", &STATE_LFSR);
-                // LFSR_MATCH = STATE_LFSR;
-                // printf("\n%" PRIu32, STATE_LFSR);
-                // // u_idx = 0;
-                // // idx = 0;
-                PREV = GAME_STATE;
-                GAME_STATE = NEW_STATE;
-                printf("BALLS\n");
+                STATE_LFSR = LFSR_INIT;
+                LFSR_MATCH = LFSR_INIT;
                 break;
             case '9':
             case 'o':
-                STEP = next_step(&STATE_LFSR);
+                GAME_STATE = RESET;
                 break;
+
             }
             break;
-        case NAME_INPUT:
-            if (rx_data != '\n')
-            {
-                // name[len] = rx_data;
-                len++;
-            }
-            else
-            {
-                // name[len] = '\0';
-                GAME_STATE = UART_SCORE;
-            }
+        // case NAME_INPUT:
+        //     if (rx_data != '\n')
+        //     {
+        //         // name[len] = rx_data;
+        //         len++;
+        //     }
+        //     else
+        //     {
+        //         // name[len] = '\0';
+        //         GAME_STATE = UART_SCORE;
+        //     }
         default:
             break;
         }

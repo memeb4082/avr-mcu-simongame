@@ -14,6 +14,7 @@
 #define BR 9600
 #define MASK 0xE2023CAB
 #define LFSR_INIT 0x11230851
+#define WAIT_FAIL 2000 // TODO: Change to 5000, lower for testing
 typedef enum
 {
     START,
@@ -24,10 +25,10 @@ typedef enum
     SUCCESS,
     FAIL,
     DISP_SCORE,
-    NAME_INPUT,
     UART_SCORE,
     RANKINGS,
-    FINISH
+    FINISH,
+    RESET
     // TODO: Figure out all the states and shii
 } state;
 
