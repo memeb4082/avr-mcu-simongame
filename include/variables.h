@@ -20,6 +20,7 @@ typedef enum
     PLAY_TONE,
     SHOW_SEG,
     USER_INPUT,
+    NEW_STATE,
     SUCCESS,
     FAIL,
     DISP_SCORE,

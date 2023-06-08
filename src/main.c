@@ -10,7 +10,7 @@
 #include <spi.h>
 #include <uart.h>
 // TODO: check if seed vars are right ig, cause autograder fucked up (worked, bad)
-volatile uint32_t STATE_LFSR = LFSR_INIT;
+uint32_t STATE_LFSR = LFSR_INIT;
 volatile uint32_t LFSR_MATCH = LFSR_INIT;
 volatile uint16_t NOTE;
 volatile uint8_t pb_released = 0;
@@ -31,8 +31,7 @@ int8_t segs[10] = {
     0b0010000,
     0b1001011,
     0b0000000,
-    0b0000001
-};
+    0b0000001};
 // Stores SPI thingo
 uint8_t spi;
 // Stores index of playback and shii
@@ -44,10 +43,12 @@ uint8_t input;
 // Bool var sorta
 uint8_t valid = 1;
 volatile state GAME_STATE = START;
+volatile state PREV;
 volatile buzzer_state BUZZER = PAUSE;
 volatile uint8_t uart_in;
-volatile char* name;
+volatile char *name;
 volatile uint8_t len;
+const uint32_t SHIFT_MASK = 0xFFFFFFFF;
 int main()
 {
     // initialise stuff
@@ -62,6 +63,8 @@ int main()
     uint8_t pb_falling_edge, pb_rising_edge;
     uint8_t tens = 0;
     uint8_t ones = 0;
+    char tmp;
+    uint8_t i = 0;
     while (1)
     {
         /*
@@ -100,7 +103,7 @@ int main()
             {
                 elapsed_time = 0; // set the time to 0
                 GAME_STATE = PLAY_TONE;
-                STEP = next_step(&STATE_LFSR); 
+                if (PREV != NEW_STATE) STEP = next_step(&STATE_LFSR);
                 /* new step variable
                 printf("sequence state is %08x\n", STATE_LFSR);
                 printf("%" PRIX32 "\n", STATE_LFSR);
@@ -147,13 +150,32 @@ int main()
             }
             spi_write(spi);
             break;
+        case NEW_STATE:
+            while (i != 8)
+            {
+                tmp = uart_getc();
+                if (tmp != '\0')
+                {
+                    // Massive fuckup bitmask shit to get nth bitmask hope it works it defo wont lol
+                    STATE_LFSR = (STATE_LFSR) & ~(SHIFT_MASK << (4 * i)) | hexchar_to_int(tmp) << (4 * i);
+                    i++;
+                }
+                LFSR_MATCH = STATE_LFSR;
+            }
+            if (i == 8)
+            {
+                i = 0;
+                PREV = NEW_STATE;
+                GAME_STATE = PREV;
+            }
+            break;
         case USER_INPUT:
             // PB Stuff
             spi_write(spi);
             switch (BUZZER)
             {
             case PLAY:
-                if ((!pb_released) & (elapsed_time >= delay)) printf("%d\n", elapsed_time);
+                // if ((!pb_released) & (elapsed_time >= delay)) printf("%d\n", elapsed_time);
                 if (!pb_released)
                 {
                     if (pb_rising_edge & (PB1 | PB2 | PB3 | PB4))
@@ -167,17 +189,17 @@ int main()
                     uart_in = 0;
                     elapsed_time = 0;
                     stop_tone();
-                    printf("%d\n", input);
-                    printf("FUCK");
+                    // printf("%d\n", input);
+                    // printf("FUCK");
                     /* Match user input with sequence */
                     if (next_step(&LFSR_MATCH) == input)
                     {
-                        printf("Passed\n");
+                        // printf("Passed\n");
                         valid *= 1;
                     }
                     else
                     {
-                        printf("Failed\n");
+                        // printf("Failed\n");
                         valid *= 0;
                         GAME_STATE = FAIL;
                     }
@@ -233,7 +255,7 @@ int main()
             }
             break;
         case SUCCESS:
-            printf("passed");
+            // printf("passed");
             if (elapsed_time >= delay)
             {
                 elapsed_time = 0;
@@ -257,11 +279,11 @@ int main()
             }
             break;
         case FAIL:
-            printf("failed");
+            // printf("failed");
             if (elapsed_time >= delay)
             {
                 elapsed_time = 0;
-                printf(STATE_LFSR);                
+                // printf(STATE_LFSR);
                 GAME_STATE = DISP_SCORE;
             }
             else

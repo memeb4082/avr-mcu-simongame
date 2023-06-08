@@ -3,11 +3,13 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <sequence.h>
+#include <playback.h>
 #include <stdio.h>
 extern volatile uint8_t uart_in;
 extern volatile state GAME_STATE;
+extern volatile state PREV;
 extern volatile int8_t octave;
-extern volatile uint32_t STATE_LFSR;
+extern uint32_t STATE_LFSR;
 extern volatile uint32_t LFSR_MATCH;
 extern volatile uint32_t u_idx;
 extern volatile uint32_t idx;
@@ -16,39 +18,44 @@ extern volatile int8_t STEP;
 // extern volatile char name[4];
 extern volatile uint8_t len;
 extern volatile buzzer_state BUZZER;
-
-char *c;
-uint8_t i;
-
-uint32_t stringToHex(const char *str)
+uint8_t hexchar_to_int(char c)
 {
-    unsigned int hex = 0;
-
-    for (int i = 0; i < 8; i++)
-    {
-        hex <<= 4; // Shift the existing bits left by 4 positions
-
-        if (str[i] >= '0' && str[i] <= '9')
-        {
-            hex |= (str[i] - '0'); // Convert numeric characters to hexadecimal value
-        }
-        else if (str[i] >= 'A' && str[i] <= 'F')
-        {
-            hex |= (str[i] - 'A' + 10); // Convert uppercase alphabets to hexadecimal value
-        }
-        else if (str[i] >= 'a' && str[i] <= 'f')
-        {
-            hex |= (str[i] - 'a' + 10); // Convert lowercase alphabets to hexadecimal value
-        }
-        else
-        {
-            printf("Invalid character: %c\n", str[i]);
-            return 0;
-        }
-    }
-
-    return hex;
+    if ('0' <= c && c <= '9')
+        return c - '0';
+    else if ('a' <= c && c <= 'f')
+        return 10 + c - 'a';
+    else
+        return 16; // Invalid
 }
+// uint32_t stringToHex(const char *str)
+// {
+//     unsigned int hex = 0;
+
+//     for (int i = 0; i < 8; i++)
+//     {
+//         hex <<= 4; // Shift the existing bits left by 4 positions
+
+//         if (str[i] >= '0' && str[i] <= '9')
+//         {
+//             hex |= (str[i] - '0'); // Convert numeric characters to hexadecimal value
+//         }
+//         else if (str[i] >= 'A' && str[i] <= 'F')
+//         {
+//             hex |= (str[i] - 'A' + 10); // Convert uppercase alphabets to hexadecimal value
+//         }
+//         else if (str[i] >= 'a' && str[i] <= 'f')
+//         {
+//             hex |= (str[i] - 'a' + 10); // Convert lowercase alphabets to hexadecimal value
+//         }
+//         else
+//         {
+//             printf("Invalid character: %c\n", str[i]);
+//             return 0;
+//         }
+//     }
+
+//     return hex;
+// }
 // ------------------------  SERIAL PARSER  ------------------------
 uint8_t uart_getc(void)
 {
@@ -91,72 +98,91 @@ void stdio_init(void)
 }
 ISR(USART0_RXC_vect)
 {
-    char rx_data = USART0.RXDATAL;
-    USART0.TXDATAL = rx_data;
-    switch (GAME_STATE)
+    // if (GAME_STATE != NEW_STATE)
+    // {
+    if (GAME_STATE == NEW_STATE)
     {
-    case USER_INPUT:
-        switch (rx_data)
+    }
+    else
+    {
+        char rx_data = USART0.RXDATAL;
+        USART0.TXDATAL = rx_data;
+        switch (GAME_STATE)
         {
-        case '1':
-        case 'q':
-            uart_in = 1;
-            break;
-        case '2':
-        case 'w':
-            uart_in = 2;
-            break;
-        case '3':
-        case 'e':
-            uart_in = 3;
-            break;
-        case '4':
-        case 'r':
-            uart_in = 4;
-            break;
-        case ',':
-        case 'k':
-            if (octave < OCTAVES_MAX)
-                octave++;
-            printf("%d", TCA0.SINGLE.PERBUF);
-            break;
-        case '.':
-        case 'l':
-            if (octave > OCTAVES_MIN)
-                octave--;
-            printf("%d", TCA0.SINGLE.PERBUF);
-            break;
-        case '0':
-        case 'p':
-            i = 0;
-            while (i < 8)
+        case USER_INPUT:
+            switch (rx_data)
             {
-                c[0] = uart_getc();
-                i++;
+            case '1':
+            case 'q':
+                uart_in = 1;
+                break;
+            case '2':
+            case 'w':
+                uart_in = 2;
+                break;
+            case '3':
+            case 'e':
+                uart_in = 3;
+                break;
+            case '4':
+            case 'r':
+                uart_in = 4;
+                break;
+            case ',':
+            case 'k':
+                if (octave < OCTAVES_MAX)
+                    octave++;
+                printf("%d", TCA0.SINGLE.PERBUF);
+                break;
+            case '.':
+            case 'l':
+                if (octave > OCTAVES_MIN)
+                    octave--;
+                printf("%d", TCA0.SINGLE.PERBUF);
+                break;
+            case '0':
+            case 'p':
+                // printf("\nBALLS");
+                // while (i < 8)
+                // {
+                //     tmp = uart_getc();
+                //     if (tmp != '\0')
+                //     {
+                //         c[i] = uart_getc();
+                //         i++;
+                //     }
+                // }
+                // sscanf(c, "%x", &STATE_LFSR);
+                // LFSR_MATCH = STATE_LFSR;
+                // printf("\n%" PRIu32, STATE_LFSR);
+                // // u_idx = 0;
+                // // idx = 0;
+                PREV = GAME_STATE;
+                GAME_STATE = NEW_STATE;
+                printf("BALLS\n");
+                break;
+            case '9':
+            case 'o':
+                STEP = next_step(&STATE_LFSR);
+                break;
             }
-            STATE_LFSR = stringToHex(c);
-            LFSR_MATCH = STATE_LFSR;
-            u_idx = 0;
-            idx = 0;
             break;
-        case '9':
-        case 'o':
-            STEP = next_step(&STATE_LFSR);
+        case NAME_INPUT:
+            if (rx_data != '\n')
+            {
+                // name[len] = rx_data;
+                len++;
+            }
+            else
+            {
+                // name[len] = '\0';
+                GAME_STATE = UART_SCORE;
+            }
+        default:
             break;
-        }
-        break;
-    case NAME_INPUT:
-        if (rx_data != '\n')
-        {
-            // name[len] = rx_data;
-            len++;
-        }
-        else
-        {
-            // name[len] = '\0';
-            GAME_STATE = UART_SCORE;
         }
     }
+    // }
     if (BUZZER == PLAY)
     {
         stop_tone();
