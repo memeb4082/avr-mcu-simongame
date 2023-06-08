@@ -9,7 +9,8 @@
 #define CSHARP 284
 #define A 451
 #define ELOW 169
-#define OCTAVES 4
+#define OCTAVES_MAX 3
+#define OCTAVES_MIN -2
 #define BR 9600
 #define MASK 0xE2023CAB
 #define LFSR_INIT 0x11230851

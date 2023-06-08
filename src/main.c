@@ -14,10 +14,9 @@ volatile uint32_t STATE_LFSR = LFSR_INIT;
 volatile uint32_t LFSR_MATCH = LFSR_INIT;
 volatile uint16_t NOTE;
 volatile uint8_t pb_released = 0;
-volatile int8_t octave = -OCTAVES;
-volatile uint32_t STATE;
+volatile int8_t octave = 0;
 volatile uint8_t score;
-volatile uint32_t level = 1;
+volatile uint16_t level = 1;
 volatile uint16_t delay;
 volatile int8_t STEP;
 extern volatile uint16_t playback_time;
@@ -32,7 +31,8 @@ int8_t segs[10] = {
     0b0010000,
     0b1001011,
     0b0000000,
-    0b0000001};
+    0b0000001
+};
 // Stores SPI thingo
 uint8_t spi;
 // Stores index of playback and shii
@@ -46,11 +46,14 @@ uint8_t valid = 1;
 volatile state GAME_STATE = START;
 volatile buzzer_state BUZZER = PAUSE;
 volatile uint8_t uart_in;
-volatile char name[4];
+volatile char* name;
 volatile uint8_t len;
 int main()
 {
+    // initialise stuff
     init();
+    // initialise printf
+    stdio_init();
     // Clear DISP
     spi_write(0xFF);
     // Push button states
@@ -59,7 +62,6 @@ int main()
     uint8_t pb_falling_edge, pb_rising_edge;
     uint8_t tens = 0;
     uint8_t ones = 0;
-    spi_write(0xFF);
     while (1)
     {
         /*
@@ -68,8 +70,7 @@ int main()
         an interval of 10ms times 10 to get timerticks (timer ticks every millisecond)
         TODO: Switch to ISR maybe
         */
-        delay = (0.855 * (ADC0.RESULT >> 5)) + 250;
-        // delay = 1;
+        delay = (117 * (ADC0.RESULT >> 12)) + 250;
         /*
         If multiple pushbuttons are on a single port, transitions for all
         pushbuttons can be calculated in parallel using bitwise operations
@@ -99,7 +100,11 @@ int main()
             {
                 elapsed_time = 0; // set the time to 0
                 GAME_STATE = PLAY_TONE;
-                STEP = next_step(&STATE_LFSR); // new step variable
+                STEP = next_step(&STATE_LFSR); 
+                /* new step variable
+                printf("sequence state is %08x\n", STATE_LFSR);
+                printf("%" PRIX32 "\n", STATE_LFSR);
+                */
                 switch (STEP)
                 {
                 case 1:
@@ -148,9 +153,10 @@ int main()
             switch (BUZZER)
             {
             case PLAY:
+                if ((!pb_released) & (elapsed_time >= delay)) printf("%d\n", elapsed_time);
                 if (!pb_released)
                 {
-                    if ((pb_rising_edge & (PB1 | PB2 | PB3 | PB4)) | (uart_in > 0))
+                    if (pb_rising_edge & (PB1 | PB2 | PB3 | PB4))
                     {
                         pb_released = 1;
                     }
@@ -159,21 +165,27 @@ int main()
                 {
                     spi = 0xFF;
                     uart_in = 0;
+                    elapsed_time = 0;
                     stop_tone();
+                    printf("%d\n", input);
+                    printf("FUCK");
                     /* Match user input with sequence */
                     if (next_step(&LFSR_MATCH) == input)
                     {
+                        printf("Passed\n");
                         valid *= 1;
                     }
                     else
                     {
+                        printf("Failed\n");
                         valid *= 0;
+                        GAME_STATE = FAIL;
                     }
                 }
                 break;
             case PAUSE:
-                // int cmp instead of str cmp, faster i think
                 /*
+                int cmp instead of str cmp, faster i think
                 qwer -> 113 119 101 114
                 1234 ->  49  50  51  52
                 */
@@ -219,23 +231,14 @@ int main()
                 }
                 break;
             }
-            if (idx == u_idx && (pb_released & (elapsed_time >= delay)))
-            {
-                elapsed_time = 0;
-                stop_tone();
-                GAME_STATE = FAIL;
-                if (valid == 1)
-                {
-                    GAME_STATE = SUCCESS;
-                }
-            }
             break;
         case SUCCESS:
+            printf("passed");
             if (elapsed_time >= delay)
             {
                 elapsed_time = 0;
-                STATE_LFSR = LFSR_INIT;
-                LFSR_MATCH = LFSR_INIT;
+                // STATE_LFSR = LFSR_INIT;
+                // LFSR_MATCH = LFSR_INIT;
                 u_idx = 0;
                 idx = 0;
                 level++;
@@ -254,20 +257,22 @@ int main()
             }
             break;
         case FAIL:
+            printf("failed");
             if (elapsed_time >= delay)
             {
                 elapsed_time = 0;
+                printf(STATE_LFSR);                
                 GAME_STATE = DISP_SCORE;
             }
             else
             {
                 if ((elapsed_time % 2) == 1)
                 {
-                    spi_write(0b0000001);
+                    spi_write(0b1110111);
                 }
                 else
                 {
-                    spi_write(0b0000001 | (0x01 << 7));
+                    spi_write(0b1110111 | (0x01 << 7));
                 }
             }
             break;
@@ -289,13 +294,12 @@ int main()
             }
             if (elapsed_time >= delay)
             {
-                uart_puts("Enter name:");
                 GAME_STATE = NAME_INPUT;
             }
             // TODO: move vars to top maybe
             break;
         case NAME_INPUT:
-            if ((elapsed_time % 2) == 1)
+            if (((elapsed_time % 2) == 1)) // TODO: Figure out how to get tens to stop displaying here when score less than 100
             {
                 spi_write(segs[ones]);
             }
@@ -305,10 +309,7 @@ int main()
             }
             break;
         case UART_SCORE:
-            uart_puts("\n Your score ");
-            uart_puts(name);
-            uart_puts(" is ");
-            uart_putc(level + 48); // make this work up 65535
+            uart_putc(level + 48);
             GAME_STATE = FINISH;
             break;
         case RANKINGS:

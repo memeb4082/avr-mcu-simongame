@@ -1,4 +1,5 @@
 #ifndef INIT_H
+
 #define INIT_H 1
 
 #include <avr/io.h>
@@ -53,7 +54,7 @@ void timer_init()
 	TCB0.CTRLA = TCB_ENABLE_bm;
 	TCB0.CTRLB = TCB_CNTMODE_INT_gc;
 
-	TCB1.CCMP = 3333 >> 2;
+	TCB1.CCMP = 3333;
 	TCB1.INTCTRL = TCB_CAPT_bm;
 	TCB1.CTRLA = TCB_ENABLE_bm;
 }
@@ -108,4 +109,6 @@ void init()
 	adc_init();
 	sei();
 }
+
+
 #endif

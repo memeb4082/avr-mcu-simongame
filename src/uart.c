@@ -3,6 +3,7 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <sequence.h>
+#include <stdio.h>
 extern volatile uint8_t uart_in;
 extern volatile state GAME_STATE;
 extern volatile int8_t octave;
@@ -14,6 +15,7 @@ extern volatile uint8_t level;
 extern volatile int8_t STEP;
 extern volatile char name[4];
 extern volatile uint8_t len;
+extern volatile buzzer_state BUZZER;
 // ------------------------  SERIAL PARSER  ------------------------
 uint8_t uart_getc(void)
 {
@@ -38,6 +40,22 @@ void uart_puts(char *string)
     }
 }
 
+static int stdio_putchar(char c, FILE *stream)
+{
+    uart_putc(c);
+    return c; // the putchar function must return the character written to the stream
+}
+static int stdio_getchar(FILE *stream)
+{
+    return uart_getc();
+}
+static FILE stdio = FDEV_SETUP_STREAM(stdio_putchar, stdio_getchar, _FDEV_SETUP_RW);
+void stdio_init(void)
+{
+    // Assumes serial interface is initialised elsewhere
+    stdout = &stdio;
+    stdin = &stdio;
+}
 ISR(USART0_RXC_vect)
 {
     char rx_data = USART0.RXDATAL;
@@ -65,11 +83,13 @@ ISR(USART0_RXC_vect)
             break;
         case ',':
         case 'k':
-            octave++;
+            if (octave < OCTAVES_MAX) octave++;
+            printf("%d", TCA0.SINGLE.PERBUF);
             break;
         case '.':
         case 'l':
-            octave--;
+            if (octave > OCTAVES_MIN) octave--;
+            printf("%d", TCA0.SINGLE.PERBUF);
             break;
         case '0':
         case 'p':
@@ -95,5 +115,10 @@ ISR(USART0_RXC_vect)
             name[len] = '\0';
             GAME_STATE = UART_SCORE;
         }
+    }
+    if (BUZZER == PLAY)
+    {
+        stop_tone();
+        play_tone();
     }
 }
