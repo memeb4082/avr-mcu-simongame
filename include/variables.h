@@ -20,8 +20,6 @@ typedef enum
     START,
     OUTPUT,
     USER_INPUT,
-    NEW_STATE,
-    AWAITING_SEED,
     SUCCESS,
     FAIL,
     DISP_SCORE,
@@ -42,6 +40,5 @@ typedef enum
 {
     AWAITING_COMMAND,
     AWAITING_PAYLOAD,
-    REJECT
 } serial_state;
 #endif

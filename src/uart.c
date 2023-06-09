@@ -20,7 +20,7 @@ extern volatile uint8_t len;
 extern volatile buzzer_state BUZZER;
 static serial_state SERIAL_STATE;
 uint32_t LFSR_PAYLOAD;
-uint8_t payload_set = 1;
+uint8_t payload_set = 0;
 uint8_t parsed_result;
 uint8_t count;
 uint8_t hexchar_to_int(char c)
@@ -109,8 +109,7 @@ ISR(USART0_RXC_vect)
             break;
         case '0':
         case 'p':
-            STATE_LFSR = LFSR_INIT;
-            LFSR_MATCH = LFSR_INIT;
+            GAME_STATE = RESET;
             break;
         case '9':
         case 'o':
@@ -139,7 +138,7 @@ ISR(USART0_RXC_vect)
             }
             if (++count > 8)
             {
-                payload_set = 0;
+                payload_set = 1;
                 SERIAL_STATE = AWAITING_COMMAND;
             }
             break;

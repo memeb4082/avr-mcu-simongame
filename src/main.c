@@ -99,9 +99,8 @@ int main()
             // printf("Level is %d\n", level);
             if (idx == level)
             {
-                stop_tone(); // stop residual tones
+                stop_tone();
                 spi = 0xFF;
-                // printf("\n");
                 GAME_STATE = USER_INPUT;
             }
             else
@@ -109,32 +108,23 @@ int main()
                 elapsed_time = 0; // set the time to 0
                 GAME_STATE = OUTPUT;
                 STEP = next_step(&STATE_LFSR);
-                /* new step variable
-                printf("sequence state is %08x\n", STATE_LFSR);
-                printf("%" PRIX32 "\n", STATE_LFSR);
-                */
-                // printf("\n");
                 switch (STEP)
                 {
                 case 1:
                     NOTE = EHIGH;
                     spi = 0b0111110 | (0x01 << 7);
-                    // printf("1");
                     break;
                 case 2:
                     NOTE = CSHARP;
                     spi = 0b1101011 | (0x01 << 7);
-                    // printf("2");
                     break;
                 case 3:
                     NOTE = A;
                     spi = 0b0111110;
-                    // printf("3");
                     break;
                 case 4:
                     NOTE = ELOW;
                     spi = 0b1101011;
-                    // printf("4");
                     break;
                 }
                 idx++;
@@ -162,7 +152,6 @@ int main()
             switch (BUZZER)
             {
             case PLAY:
-                // if ((!pb_released) & (elapsed_time >= delay)) printf("%d\n", elapsed_time);
                 if (!pb_released)
                 {
                     if (pb_rising_edge & (PB1 | PB2 | PB3 | PB4))
@@ -182,12 +171,9 @@ int main()
                     uart_in = 0;
                     elapsed_time = 0;
                     stop_tone();
-                    // printf("%d\n", input);
-                    // printf("FUCK");
                     /* Match user input with sequence */
                     if (next_step(&LFSR_MATCH) == input)
                     {
-                        // printf("Passed\n");
                         valid *= 1;
                         if ((u_idx == level) & (valid == 1))
                         {
@@ -200,7 +186,6 @@ int main()
                     }
                     else
                     {
-                        // printf("Failed\n");
                         valid *= 0;
                         GAME_STATE = FAIL;
                     }
@@ -255,32 +240,16 @@ int main()
                 break;
             }
             break;
-        case AWAITING_SEED:
-            // while (i < 7)
-            // {
-            //     tmp[i] = hexchar_to_int(uart_getc());
-            //     if (tmp[i] != 16) i++;
-            //     printf("%d", i);
-            //     printf("%s\n", tmp);
-            // }
-            // tmp[i] = "\0";
-            // if (i >= 8) {
-            //     i = 0;
-            //     printf("%s\n", tmp);
-            //     GAME_STATE = START;
-            // }
-            break;
         case SUCCESS:
             // printf("passed");
             if (elapsed_time >= delay)
             {
                 STATE_LFSR = STATE_MATCH;
                 LFSR_MATCH = STATE_MATCH;
-                if (!payload_set)
+                if (payload_set)
                 {
                     STATE_LFSR = LFSR_PAYLOAD;
                     STATE_MATCH = LFSR_PAYLOAD;
-                    payload_set = 1;
                 }
                 u_idx = 0;
                 idx = 0;
@@ -304,11 +273,10 @@ int main()
         case FAIL:
             STATE_MATCH = STATE_LFSR; // set to match
             LFSR_MATCH = STATE_MATCH; // set match to state match
-            if (!payload_set)
+            if (payload_set)
             {
                 STATE_LFSR = LFSR_PAYLOAD;
                 STATE_MATCH = LFSR_PAYLOAD;
-                payload_set = 1;
             }
             if (elapsed_time >= delay)
             {
@@ -318,8 +286,6 @@ int main()
                 valid = 1;
                 level = 1;
                 spi_write(0xFF);
-                // printf("%" PRIx32 "\n", STATE_LFSR);
-                // printf("%" PRIx32 "\n", LFSR_MATCH);
                 GAME_STATE = START;
             }
             else
@@ -333,6 +299,20 @@ int main()
                     spi_write(0b1110111 | (0x01 << 7));
                 }
             }
+            break;
+        case RESET:
+            STATE_LFSR = LFSR_INIT;
+            STATE_MATCH = LFSR_INIT;
+            if (!payload_set)
+            {
+                STATE_LFSR = LFSR_PAYLOAD;
+                STATE_MATCH = LFSR_PAYLOAD;
+                payload_set = 1;
+            }
+            level = 1;
+            u_idx = 0;
+            idx = 0;
+            GAME_STATE = START;
             break;
         case DISP_SCORE:
             if (level > 100)
