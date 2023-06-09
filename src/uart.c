@@ -101,13 +101,11 @@ ISR(USART0_RXC_vect)
         case 'k':
             if (octave < OCTAVES_MAX)
                 octave++;
-            printf("%d", TCA0.SINGLE.PERBUF);
             break;
         case '.':
         case 'l':
             if (octave > OCTAVES_MIN)
                 octave--;
-            printf("%d", TCA0.SINGLE.PERBUF);
             break;
         case '0':
         case 'p':
@@ -124,15 +122,11 @@ ISR(USART0_RXC_vect)
                 {
                     i++;
                 }
-                printf("%d\n", i);
-                // printf("%s\n", tsmp);
             }
             tmp[i] = "\0";
-            printf(tmp);
             if (i == 8)
             {
                 i = 0;
-                printf("%s\n", tmp);
                 GAME_STATE = START;
             }
             break;
@@ -140,19 +134,7 @@ ISR(USART0_RXC_vect)
     default:
         break;
         break;
-        // case NAME_INPUT:
-        //     if (rx_data != '\n')
-        //     {
-        //         // name[len] = rx_data;
-        //         len++;
-        //     }
-        //     else
-        //     {
-        //         // name[len] = '\0';
-        //         GAME_STATE = UART_SCORE;
-        //     }
     }
-    // }
     if (BUZZER == PLAY)
     {
         stop_tone();
