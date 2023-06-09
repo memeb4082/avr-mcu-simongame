@@ -18,10 +18,10 @@
 typedef enum
 {
     START,
-    PLAY_TONE,
-    SHOW_SEG,
+    OUTPUT,
     USER_INPUT,
     NEW_STATE,
+    AWAITING_SEED,
     SUCCESS,
     FAIL,
     DISP_SCORE,
@@ -38,9 +38,10 @@ typedef enum
     PAUSE
 } buzzer_state;
 
-struct user
+typedef enum
 {
-    uint8_t score;
-    char *name;
-};
+    ACK,
+    NACK,
+    WAITING
+} command_response;
 #endif

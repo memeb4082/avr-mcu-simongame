@@ -20,7 +20,7 @@ void play_tone()
         TCA0.SINGLE.PERBUF = ((int)(F_CPU / NOTE)) >> (octave);
     }
     // TODO: up the duty cycle, set to lower value so i dont destroy my fucking ears
-    TCA0.SINGLE.CMP0BUF = TCA0.SINGLE.PERBUF >> 6;
+    TCA0.SINGLE.CMP0BUF = TCA0.SINGLE.PERBUF >> 4;
 }
 /*
 Clears CMP0BUF on TCA0 to stop buzzer playback

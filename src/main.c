@@ -11,6 +11,7 @@
 #include <uart.h>
 // TODO: check if seed vars are right ig, cause autograder fucked up (worked, bad)
 uint32_t STATE_LFSR = LFSR_INIT;
+uint32_t STATE_MATCH = LFSR_INIT;
 volatile uint32_t LFSR_MATCH = LFSR_INIT;
 volatile uint16_t NOTE;
 volatile uint8_t pb_released = 0;
@@ -63,7 +64,7 @@ int main()
     uint8_t pb_falling_edge, pb_rising_edge;
     uint8_t tens = 0;
     uint8_t ones = 0;
-    char tmp;
+    char *tmp;
     uint8_t i = 0;
     while (1)
     {
@@ -93,64 +94,65 @@ int main()
         {
 
         case START:
-            printf("Level is %d\n", level);
+            // printf("Level is %d\n", level);
             if (idx == level)
             {
                 stop_tone(); // stop residual tones
                 spi = 0xFF;
+                // printf("\n");
                 GAME_STATE = USER_INPUT;
             }
             else
             {
                 elapsed_time = 0; // set the time to 0
-                GAME_STATE = PLAY_TONE;
-                if (PREV != NEW_STATE)
-                    STEP = next_step(&STATE_LFSR);
+                GAME_STATE = OUTPUT;
+                STEP = next_step(&STATE_LFSR);
                 /* new step variable
                 printf("sequence state is %08x\n", STATE_LFSR);
                 printf("%" PRIX32 "\n", STATE_LFSR);
                 */
+                // printf("\n");
                 switch (STEP)
                 {
                 case 1:
                     NOTE = EHIGH;
                     spi = 0b0111110 | (0x01 << 7);
+                    // printf("1");
                     break;
                 case 2:
                     NOTE = CSHARP;
                     spi = 0b1101011 | (0x01 << 7);
+                    // printf("2");
                     break;
                 case 3:
                     NOTE = A;
                     spi = 0b0111110;
+                    // printf("3");
                     break;
                 case 4:
                     NOTE = ELOW;
                     spi = 0b1101011;
+                    // printf("4");
                     break;
                 }
                 idx++;
             }
             break;
-        case PLAY_TONE:
-            // stop at half delay
-            spi_write(0xFF); // clear DISP
-            if (elapsed_time >= (delay >> 1))
-            {
-                stop_tone();
-                GAME_STATE = SHOW_SEG;
-            }
-            else if (BUZZER == PAUSE)
+        case OUTPUT:
+            if (elapsed_time < (delay >> 1))
             {
                 play_tone();
             }
-            break;
-        case SHOW_SEG:
-            if (elapsed_time >= delay)
+            else if (elapsed_time < delay)
             {
+                stop_tone();
+                spi_write(spi);
+            }
+            else if (elapsed_time > delay)
+            {
+                spi_write(0xFF);
                 GAME_STATE = START;
             }
-            spi_write(spi);
             break;
         case USER_INPUT:
             // PB Stuff
@@ -162,6 +164,12 @@ int main()
                 if (!pb_released)
                 {
                     if (pb_rising_edge & (PB1 | PB2 | PB3 | PB4))
+                    {
+                        pb_released = 1;
+                    }
+                    // check for uart input to release pb manually
+                    // TODO: Cleaner way to do this
+                    else if (uart_in == input)
                     {
                         pb_released = 1;
                     }
@@ -245,16 +253,32 @@ int main()
                 break;
             }
             break;
+        case AWAITING_SEED:
+            // while (i < 7)
+            // {
+            //     tmp[i] = hexchar_to_int(uart_getc());
+            //     if (tmp[i] != 16) i++;
+            //     printf("%d", i);
+            //     printf("%s\n", tmp);
+            // }
+            // tmp[i] = "\0";
+            // if (i >= 8) {
+            //     i = 0;
+            //     printf("%s\n", tmp);
+            //     GAME_STATE = START;
+            // }
+            break;
         case SUCCESS:
             // printf("passed");
             if (elapsed_time >= delay)
             {
-                elapsed_time = 0;
-                STATE_LFSR = LFSR_INIT;
-                LFSR_MATCH = LFSR_INIT;
+                STATE_LFSR = STATE_MATCH;
+                LFSR_MATCH = STATE_MATCH;
                 u_idx = 0;
                 idx = 0;
                 level++;
+                spi_write(0xFF);
+
                 GAME_STATE = START;
             }
             else
@@ -270,18 +294,18 @@ int main()
             }
             break;
         case FAIL:
-            // printf("failed");
+            STATE_MATCH = STATE_LFSR; // set to match
+            LFSR_MATCH = STATE_MATCH; // set match to state match
             if (elapsed_time >= delay)
             {
                 elapsed_time = 0;
-                // sequence_fail(&STATE_LFSR);
-                // LFSR_MATCH = LFSR_INIT;
-                LFSR_MATCH = STATE_LFSR; // set to match final press thingy
                 u_idx = 0;
                 idx = 0;
                 valid = 1;
-                printf("%" PRIx32 "\n", STATE_LFSR);
-                printf("%" PRIx32 "\n", LFSR_MATCH);
+                level = 1;
+                spi_write(0xFF);
+                // printf("%" PRIx32 "\n", STATE_LFSR);
+                // printf("%" PRIx32 "\n", LFSR_MATCH);
                 GAME_STATE = START;
             }
             else
