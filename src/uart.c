@@ -4,11 +4,11 @@
 #include <avr/interrupt.h>
 #include <sequence.h>
 #include <playback.h>
+#include <variables.h>
 #include <stdio.h>
 extern volatile uint8_t pb_released;
 extern volatile uint8_t uart_in;
 extern volatile state GAME_STATE;
-extern volatile state PREV;
 extern volatile int8_t octave;
 extern uint32_t STATE_LFSR;
 extern volatile uint32_t LFSR_MATCH;
@@ -16,11 +16,13 @@ extern volatile uint32_t u_idx;
 extern volatile uint32_t idx;
 extern volatile uint8_t level;
 extern volatile int8_t STEP;
-// extern volatile char name[4];
 extern volatile uint8_t len;
 extern volatile buzzer_state BUZZER;
-char *tmp;
-int i = 0;
+static serial_state SERIAL_STATE;
+uint32_t LFSR_PAYLOAD;
+uint8_t payload_set = 1;
+uint8_t parsed_result;
+uint8_t count;
 uint8_t hexchar_to_int(char c)
 {
     if ('0' <= c && c <= '9')
@@ -70,15 +72,13 @@ void stdio_init(void)
     stdout = &stdio;
     stdin = &stdio;
 }
+
 ISR(USART0_RXC_vect)
 {
-    // if (GAME_STATE != NEW_STATE)
-    // {
     char rx_data = USART0.RXDATAL;
-    USART0.TXDATAL = rx_data;
-    switch (GAME_STATE)
+    switch (SERIAL_STATE)
     {
-    case USER_INPUT:
+    case AWAITING_COMMAND:
         switch (rx_data)
         {
         case '1':
@@ -114,24 +114,36 @@ ISR(USART0_RXC_vect)
             break;
         case '9':
         case 'o':
-            // GAME_STATE = AWAITING_SEED;
-            while (i != 8)
+            SERIAL_STATE = AWAITING_PAYLOAD;
+            break;
+        }
+        break;
+    case AWAITING_PAYLOAD:
+        switch (rx_data)
+        {
+        case ',':
+        case 'k':
+            if (octave < OCTAVES_MAX)
+                octave++;
+            break;
+        case '.':
+        case 'l':
+            if (octave > OCTAVES_MIN)
+                octave--;
+            break;
+        default:
+            parsed_result = hexchar_to_int((char)rx_data);
+            if (parsed_result != 16)
             {
-                tmp[i] = rx_data;
-                if (tmp[i] != '\0')
-                {
-                    i++;
-                }
+                LFSR_PAYLOAD = (LFSR_PAYLOAD << 4) | parsed_result;
             }
-            tmp[i] = "\0";
-            if (i == 8)
+            if (++count > 8)
             {
-                i = 0;
-                GAME_STATE = START;
+                payload_set = 0;
+                SERIAL_STATE = AWAITING_COMMAND;
             }
             break;
         }
-    default:
         break;
         break;
     }

@@ -12,7 +12,7 @@
 // TODO: check if seed vars are right ig, cause autograder fucked up (worked, bad)
 uint32_t STATE_LFSR = LFSR_INIT;
 uint32_t STATE_MATCH = LFSR_INIT;
-volatile uint32_t LFSR_MATCH = LFSR_INIT;
+uint32_t LFSR_MATCH = LFSR_INIT;
 volatile uint16_t NOTE;
 volatile uint8_t pb_released = 0;
 volatile int8_t octave = 0;
@@ -21,6 +21,8 @@ volatile uint16_t level = 1;
 volatile uint16_t delay;
 volatile int8_t STEP;
 extern volatile uint16_t playback_time;
+extern uint32_t LFSR_PAYLOAD;
+extern uint8_t payload_set;
 // Thingy to store spi out for numbers
 int8_t segs[10] = {
     0b0001000,
@@ -64,8 +66,7 @@ int main()
     uint8_t pb_falling_edge, pb_rising_edge;
     uint8_t tens = 0;
     uint8_t ones = 0;
-    char *tmp;
-    uint8_t i = 0;
+    uint8_t score;
     while (1)
     {
         /*
@@ -94,6 +95,7 @@ int main()
         {
 
         case START:
+
             // printf("Level is %d\n", level);
             if (idx == level)
             {
@@ -274,6 +276,12 @@ int main()
             {
                 STATE_LFSR = STATE_MATCH;
                 LFSR_MATCH = STATE_MATCH;
+                if (!payload_set)
+                {
+                    STATE_LFSR = LFSR_PAYLOAD;
+                    STATE_MATCH = LFSR_PAYLOAD;
+                    payload_set = 1;
+                }
                 u_idx = 0;
                 idx = 0;
                 level++;
@@ -296,6 +304,12 @@ int main()
         case FAIL:
             STATE_MATCH = STATE_LFSR; // set to match
             LFSR_MATCH = STATE_MATCH; // set match to state match
+            if (!payload_set)
+            {
+                STATE_LFSR = LFSR_PAYLOAD;
+                STATE_MATCH = LFSR_PAYLOAD;
+                payload_set = 1;
+            }
             if (elapsed_time >= delay)
             {
                 elapsed_time = 0;
@@ -321,20 +335,23 @@ int main()
             }
             break;
         case DISP_SCORE:
-            level %= 100;
-            ones = level % 10;
-            while (level > 10)
+            if (level > 100)
             {
-                level -= 10;
-                tens++;
-            }
-            if ((elapsed_time % 2) == 1)
-            {
-                spi_write(segs[ones]);
+                score = level % 100;
+                ones = score % 10;
+                while (score > 10)
+                {
+                    score -= 10;
+                    tens++;
+                }
+                if ((elapsed_time % 2) == 1)
+                {
+                    spi_write(segs[tens] | (0x01 << 7));
+                }
             }
             else
             {
-                spi_write(segs[tens] | (0x01 << 7));
+                spi_write(segs[ones]);
             }
             // TODO: move vars to top maybe
             break;

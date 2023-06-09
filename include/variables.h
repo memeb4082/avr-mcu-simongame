@@ -40,8 +40,8 @@ typedef enum
 
 typedef enum
 {
-    ACK,
-    NACK,
-    WAITING
-} command_response;
+    AWAITING_COMMAND,
+    AWAITING_PAYLOAD,
+    REJECT
+} serial_state;
 #endif
