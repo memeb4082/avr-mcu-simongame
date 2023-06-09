@@ -87,7 +87,7 @@ Initialize ADC (Analog to Digital Converter) with potentiometer as input
 void adc_init()
 {
 	ADC0.CTRLA = ADC_ENABLE_bm;		 // Enable ADC
-	ADC0.CTRLB = ADC_PRESC_DIV64_gc; // / 64 clock prescaler
+	ADC0.CTRLB = ADC_PRESC_DIV2_gc; // / 64 clock prescaler
 	ADC0.CTRLC = (4 << ADC_TIMEBASE_gp) | ADC_REFSEL_VDD_gc;
 	ADC0.CTRLE = 64;							  // Sample duration of 64
 	ADC0.CTRLF = ADC_FREERUN_bm | ADC_LEFTADJ_bm; // Free running, left adjust
