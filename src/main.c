@@ -277,6 +277,7 @@ int main()
             {
                 STATE_LFSR = LFSR_PAYLOAD;
                 STATE_MATCH = LFSR_PAYLOAD;
+                payload_set = 0;
             }
             if (elapsed_time >= delay)
             {
@@ -303,7 +304,7 @@ int main()
         case RESET:
             STATE_LFSR = LFSR_INIT;
             STATE_MATCH = LFSR_INIT;
-            if (!payload_set)
+            if (payload_set)
             {
                 STATE_LFSR = LFSR_PAYLOAD;
                 STATE_MATCH = LFSR_PAYLOAD;
@@ -312,6 +313,7 @@ int main()
             level = 1;
             u_idx = 0;
             idx = 0;
+            elapsed_time = 0;
             GAME_STATE = START;
             break;
         case DISP_SCORE:

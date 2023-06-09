@@ -136,7 +136,7 @@ ISR(USART0_RXC_vect)
             {
                 LFSR_PAYLOAD = (LFSR_PAYLOAD << 4) | parsed_result;
             }
-            if (++count > 8)
+            if (++count >= 8)
             {
                 payload_set = 1;
                 SERIAL_STATE = AWAITING_COMMAND;
