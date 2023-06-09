@@ -11,7 +11,6 @@ extern volatile uint8_t uart_in;
 extern volatile state GAME_STATE;
 extern volatile int8_t octave;
 extern uint32_t STATE_LFSR;
-extern volatile uint32_t LFSR_MATCH;
 extern volatile uint32_t u_idx;
 extern volatile uint32_t idx;
 extern volatile uint8_t level;
@@ -76,79 +75,79 @@ void stdio_init(void)
 ISR(USART0_RXC_vect)
 {
     char rx_data = USART0.RXDATAL;
-    switch (SERIAL_STATE)
-    {
-    case AWAITING_COMMAND:
-        switch (rx_data)
-        {
-        case '1':
-        case 'q':
-            uart_in = 1;
-            break;
-        case '2':
-        case 'w':
-            uart_in = 2;
-            break;
-        case '3':
-        case 'e':
-            uart_in = 3;
-            break;
-        case '4':
-        case 'r':
-            uart_in = 4;
-            break;
-        case ',':
-        case 'k':
-            if (octave < OCTAVES_MAX)
-                octave++;
-            break;
-        case '.':
-        case 'l':
-            if (octave > OCTAVES_MIN)
-                octave--;
-            break;
-        case '0':
-        case 'p':
-            GAME_STATE = RESET;
-            break;
-        case '9':
-        case 'o':
-            SERIAL_STATE = AWAITING_PAYLOAD;
-            break;
-        }
-        break;
-    case AWAITING_PAYLOAD:
-        switch (rx_data)
-        {
-        case ',':
-        case 'k':
-            if (octave < OCTAVES_MAX)
-                octave++;
-            break;
-        case '.':
-        case 'l':
-            if (octave > OCTAVES_MIN)
-                octave--;
-            break;
-        default:
-            parsed_result = hexchar_to_int((char)rx_data);
-            if (parsed_result != 16)
-            {
-                LFSR_PAYLOAD = (LFSR_PAYLOAD << 4) | parsed_result;
-            }
-            if (++count >= 8)
-            {
-                payload_set = 1;
-                SERIAL_STATE = AWAITING_COMMAND;
-            }
-            break;
-        }
-        break;
-        break;
-    }
-    if (BUZZER == PLAY)
-    {
-        stop_tone();
-        play_tone();
-    }
+    // switch (SERIAL_STATE)
+    // {
+    // case AWAITING_COMMAND:
+    //     switch (rx_data)
+    //     {
+    //     case '1':
+    //     case 'q':
+    //         uart_in = 1;
+    //         break;
+    //     case '2':
+    //     case 'w':
+    //         uart_in = 2;
+    //         break;
+    //     case '3':
+    //     case 'e':
+    //         uart_in = 3;
+    //         break;
+    //     case '4':
+    //     case 'r':
+    //         uart_in = 4;
+    //         break;
+    //     case ',':
+    //     case 'k':
+    //         if (octave < OCTAVES_MAX)
+    //             octave++;
+    //         break;
+    //     case '.':
+    //     case 'l':
+    //         if (octave > OCTAVES_MIN)
+    //             octave--;
+    //         break;
+    //     case '0':
+    //     case 'p':
+    //         GAME_STATE = RESET;
+    //         break;
+    //     case '9':
+    //     case 'o':
+    //         SERIAL_STATE = AWAITING_PAYLOAD;
+    //         break;
+    //     }
+    //     break;
+    // case AWAITING_PAYLOAD:
+    //     switch (rx_data)
+    //     {
+    //     case ',':
+    //     case 'k':
+    //         if (octave < OCTAVES_MAX)
+    //             octave++;
+    //         break;
+    //     case '.':
+    //     case 'l':
+    //         if (octave > OCTAVES_MIN)
+    //             octave--;
+    //         break;
+    //     default:
+    //         parsed_result = hexchar_to_int((char)rx_data);
+    //         if (parsed_result != 16)
+    //         {
+    //             LFSR_PAYLOAD = (LFSR_PAYLOAD << 4) | parsed_result;
+    //         }
+    //         if (++count >= 8)
+    //         {
+    //             payload_set = 1;
+    //             SERIAL_STATE = AWAITING_COMMAND;
+    //         }
+    //         break;
+    //     }
+    //     break;
+    //     break;
+    // }
+    // if (BUZZER == PLAY)
+    // {
+    //     stop_tone();
+    //     play_tone();
+    // }
 }

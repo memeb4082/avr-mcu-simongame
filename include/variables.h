@@ -11,23 +11,34 @@
 #define ELOW 169
 #define OCTAVES_MAX 3
 #define OCTAVES_MIN -2
+#define SPI_FAIL 0b1110111
+#define SPI_SUCCESS 0b0000000
 #define BR 9600
 #define MASK 0xE2023CAB
 #define LFSR_INIT 0x11230851
 #define WAIT_FAIL 2000 // TODO: Change to 5000, lower for testing
-typedef enum
-{
+
+// typedef enum
+// {
+//     START,
+//     OUTPUT,
+//     USER_INPUT,
+//     SUCCESS,
+//     FAIL,
+//     DISP_SCORE,
+//     UART_SCORE,
+//     RANKINGS,
+//     FINISH,
+//     RESET,
+//     // TODO: Figure out all the states and shii
+// } state;
+
+typedef enum {
     START,
     OUTPUT,
-    USER_INPUT,
+    INPUT,
     SUCCESS,
-    FAIL,
-    DISP_SCORE,
-    UART_SCORE,
-    RANKINGS,
-    FINISH,
-    RESET,
-    // TODO: Figure out all the states and shii
+    FAIL
 } state;
 
 typedef enum
