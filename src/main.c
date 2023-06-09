@@ -74,7 +74,7 @@ int main()
         an interval of 10ms times 10 to get timerticks (timer ticks every millisecond)
         TODO: Switch to ISR maybe
         */
-        delay = (117 * (ADC0.RESULT >> 12)) + 250;
+        delay = (58 * (ADC0.RESULT >> 11)) + 250;
         /*
         If multiple pushbuttons are on a single port, transitions for all
         pushbuttons can be calculated in parallel using bitwise operations
