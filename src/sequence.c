@@ -55,36 +55,12 @@ void update_table(char **names, char *scores, char *name, uint16_t score)
 }
 void show_table(char **names, char *scores)
 {
+    printf("\n");
     for (int i = 0; i < SCORE_TABLE_SIZE; i++)
     {
         if (names[i] != NULL)
         {
-            printf("%s: %d\n", names[i], scores[i]);
+            printf("%s %d\n", names[i], scores[i]);
         }
     }
 }
-// void show_table(scores **TABLE, uint16_t score)
-// {
-//     printf("\n");
-//     // if (score >= get_lowest_score(TABLE))
-//     // {
-//         for (int i = 0; i < SCORE_TABLE_SIZE; i++)
-//         {
-//             if (TABLE[i] != NULL)
-//             {
-//                 printf("%s %d\n", TABLE[i]->name, TABLE[i]->score);
-//             }
-//         }
-//     // }
-// }
-// uint8_t search_table(scores **TABLE, scores *PLAYER)
-// {
-//     for (int i = 0; i < SCORE_TABLE_SIZE; i++)
-//     {
-//         if (TABLE[i] == PLAYER)
-//         {
-//             return 1;
-//         }
-//     }
-//     return 0;
-// }
