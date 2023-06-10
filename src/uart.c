@@ -95,6 +95,7 @@ ISR(USART0_RXC_vect)
     {
         case (AWAITING_COMMAND):
         {
+            printf("COMMAND\n");
             switch (rx_data)
             {
                 case '1':
@@ -142,7 +143,9 @@ ISR(USART0_RXC_vect)
                 case '9':
                 case 'o':
                 {
+                    rx_data = 0b11111111;
                     SERIAL_STATE = AWAITING_PAYLOAD;
+                    break;
                 }
                 case '0':
                 case 'p':
@@ -151,16 +154,22 @@ ISR(USART0_RXC_vect)
                     break;
                 }
             }
+            break;
         }
         case AWAITING_PAYLOAD:
         {
+            printf("PAYLOAD\n");
             parsed_result = hexchar_to_int((char)rx_data);
             if (parsed_result != 16)
             {
                 LFSR_PAYLOAD = (LFSR_PAYLOAD << 4) | parsed_result;
+                payload_idx++;
+                // printf("%" PRIx32, LFSR_PAYLOAD);
             }
-            if (++payload_idx >= 8)
+            if (payload_idx >= 8)
             {
+                printf("DONE");
+                payload_idx = 0;
                 payload_set = 2;
                 SERIAL_STATE = AWAITING_COMMAND;
             }
@@ -168,6 +177,7 @@ ISR(USART0_RXC_vect)
         }
         case AWAITING_NAME:
         {
+            printf("NAME\n");
             if ((rx_data == '\n'))
             {
                 SERIAL_STATE = AWAITING_COMMAND;

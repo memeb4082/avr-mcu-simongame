@@ -257,18 +257,22 @@ int main()
         }
         case RESET:
         {
+            STATE_LFSR = LFSR_RESTORE;
+            STATE_MATCH = LFSR_RESTORE;
             if (payload_set > 0)
             {
                 STATE_LFSR = LFSR_PAYLOAD;
                 STATE_MATCH = LFSR_PAYLOAD;
                 payload_set = 1;
             }
+            printf("\n");
+            printf("%" PRIx32 "\n", STATE_LFSR);
+            printf("%" PRIx32 "\n", STATE_MATCH);
             u_idx = 0;
             idx = 0;
             level = 1;
             elapsed_time = 0;
             octave = 0;
-            
             GAME_STATE = START;
         }
         case FAIL:
