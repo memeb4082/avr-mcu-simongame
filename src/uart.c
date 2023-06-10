@@ -90,6 +90,7 @@ void stdio_init(void)
 ISR(USART0_RXC_vect)
 {
     char rx_data = USART0.RXDATAL;
+    USART0.TXDATAL = rx_data;
     switch (SERIAL_STATE)
     {
         case (AWAITING_COMMAND):
