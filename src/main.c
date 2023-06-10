@@ -78,7 +78,8 @@ int main()
         an interval of 10ms times 10 to get timerticks (timer ticks every millisecond)
         TODO: Switch to ISR maybe
         */
-        delay = (117 * (ADC0.RESULT >> 12)) + 248;
+        delay = ((219 * (ADC0.RESULT)) >> 13) + 249;
+        printf("Delay: %" PRId16 "\n", (delay));
         /*
         If multiple pushbuttons are on a single port, transitions for all
         pushbuttons can be calculated in parallel using bitwise operations
@@ -333,7 +334,23 @@ int main()
                         STATE_MATCH = LFSR_RESTORE;
                     }
                     elapsed_time = 0;
-                    // GAME_STATE = SCORE;
+                    GAME_STATE = SCORE;
+                } else {
+                    if ((elapsed_time % 2) == 1)
+                    {
+                        spi_write(SPI_SUCCESS);
+                    }
+                    else
+                    {
+                        spi_write(SPI_SUCCESS | (1 << 7));
+                    }
+                }
+                break;
+            }
+            case SCORE:
+            {
+                if (elapsed_time >= delay)
+                {
                     GAME_STATE = START;
                 } else {
                     if ((elapsed_time % 2) == 1)
@@ -348,18 +365,7 @@ int main()
                         }
                     }
                 }
-                break;
             }
-        //     case SCORE:
-        //     {
-        //         if (elapsed_time >= delay)
-        //         {
-        //             elapsed_time = 0;
-        //             GAME_STATE = START;
-        //         } else {
-                    
-        //         }
-        //     }
         }
     }
 }
