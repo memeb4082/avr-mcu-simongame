@@ -265,9 +265,6 @@ int main()
                 STATE_MATCH = LFSR_PAYLOAD;
                 payload_set = 1;
             }
-            printf("\n");
-            printf("%" PRIx32 "\n", STATE_LFSR);
-            printf("%" PRIx32 "\n", STATE_MATCH);
             u_idx = 0;
             idx = 0;
             level = 1;
