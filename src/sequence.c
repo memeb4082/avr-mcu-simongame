@@ -50,6 +50,11 @@ void update_table(char **names, char *scores, char *name, uint16_t score)
             names[i] = name;
             scores[i] = score;
             return;
+        } else if (scores[i] < score)
+        {
+            names[i] = name;
+            scores[i] = score;
+            return;
         }
     }
 }

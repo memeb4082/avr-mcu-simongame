@@ -268,6 +268,7 @@ int main()
             level = 1;
             elapsed_time = 0;
             octave = 0;
+            
             GAME_STATE = START;
         }
         case FAIL:
