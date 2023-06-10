@@ -12,6 +12,7 @@
 // TODO: check if seed vars are right ig, cause autograder fucked up (worked, bad)
 uint32_t STATE_LFSR = LFSR_INIT;  // LFSR state for creating random sequence
 uint32_t STATE_MATCH = LFSR_INIT; // LFSR state to match against random sequence
+uint32_t LFSR_RESTORE = LFSR_INIT; // LFSR state for restoring sequence
 uint16_t NOTE;
 volatile uint8_t pb_released = 0;
 volatile int8_t octave = 0;
@@ -198,6 +199,7 @@ int main()
                         // valid *= 0;
                         printf("GAME OVER\n");
                         printf("Enter name: ");
+                        level = 0;
                         u_idx = 0;
                         idx = 0;
                         SERIAL_STATE = AWAITING_NAME;
@@ -271,13 +273,20 @@ int main()
         {
             if ((payload_set == 2))
             {
-                STATE_LFSR = STATE_MATCH; // start the new sequence from the one after the wrong input
+                // set lfsr to payload from uart
+                STATE_LFSR = LFSR_PAYLOAD;
+                STATE_MATCH = LFSR_PAYLOAD;
                 payload_set = 1;
+            } else {
+                // set lfsr to last value that user got right 
+                // and set restore value to last value correct
+                LFSR_RESTORE = STATE_MATCH;
+                STATE_LFSR = LFSR_RESTORE;
             }
             if ((elapsed_time >= WAIT_FAIL) | (SERIAL_STATE == AWAITING_COMMAND))
             {
-                update_table(&names, &scores, name, level);
-                show_table(&names, &scores);
+                update_table((char**)names, (char*)scores, name, level);
+                show_table((char**)names, (char*)scores);
                 SERIAL_STATE = AWAITING_COMMAND;
                 // if (!(search_table(&SCORES, &PLAYER)))
                 // {
@@ -307,14 +316,17 @@ int main()
             {
                 if (payload_set > 0)
                 {
+                    // set lfsr to payload from uart
                     STATE_LFSR = LFSR_PAYLOAD;
                     STATE_MATCH = LFSR_PAYLOAD;
                     payload_set = 1; // set to 1 for next fail
                 }
                 else
                 {
-                    STATE_LFSR = LFSR_INIT;
-                    STATE_MATCH = LFSR_INIT;
+                    // restore lfsr from lfsr restore
+                    // could be either lfsr init or lfsr from last failure
+                    STATE_LFSR = LFSR_RESTORE;
+                    STATE_MATCH = LFSR_RESTORE;
                 }
                 GAME_STATE = START;
             }
