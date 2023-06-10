@@ -174,6 +174,10 @@ ISR(USART0_RXC_vect)
         }
         case AWAITING_NAME:
         {
+            if (name_idx > 0)
+            {
+                clear_str(&name);
+            }
             if ((rx_data == '\n'))
             {
                 SERIAL_STATE = AWAITING_COMMAND;
@@ -181,7 +185,8 @@ ISR(USART0_RXC_vect)
             {
                 name[name_idx] = rx_data;
                 name_idx++;
-            } 
+                name[name_idx] = '\0';
+            }
             break;
         }
     }

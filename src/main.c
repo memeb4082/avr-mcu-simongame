@@ -106,35 +106,42 @@ int main()
             {
                 elapsed_time = 0; // reset elapsed time
                 STEP = next_step(&STATE_LFSR);
+                GAME_STATE = OUTPUT;
                 switch (STEP)
                 {
-                case 1:
-                {
-                    NOTE = EHIGH;
-                    spi = 0b0111110 | (1 << 7);
-                    break;
+                    case 0:
+                    {
+                        NOTE = EHIGH;
+                        spi = 0b0111110 | (1 << 7);
+                        idx++; // increments the index of the tones played
+                        break;
+                    }
+                    case 1:
+                    {
+                        NOTE = CSHARP;
+                        spi = 0b1101011 | (1 << 7);
+                        idx++; // increments the index of the tones played
+                        break;
+                    }
+                    case 2:
+                    {
+                        NOTE = A;
+                        spi = 0b0111110;
+                        idx++; // increments the index of the tones played
+                        break;
+                    }
+                    case 3:
+                    {
+                        NOTE = ELOW;
+                        spi = 0b1101011;
+                        idx++; // increments the index of the tones played
+                        break;
+                    }
+                    default:
+                    {
+                        GAME_STATE = START;
+                    }
                 }
-                case 2:
-                {
-                    NOTE = CSHARP;
-                    spi = 0b1101011 | (1 << 7);
-                    break;
-                }
-                case 3:
-                {
-                    NOTE = A;
-                    spi = 0b0111110;
-                    break;
-                }
-                case 4:
-                {
-                    NOTE = ELOW;
-                    spi = 0b1101011;
-                    break;
-                }
-                }
-                idx++; // increments the index of the tones played
-                GAME_STATE = OUTPUT;
             }
             break;
         }
@@ -190,7 +197,6 @@ int main()
                             level++;
                             u_idx = 0;
                             idx = 0;
-                            printf("SUCCESS\n");
                             GAME_STATE = SUCCESS;
                         }
                     }
@@ -213,7 +219,7 @@ int main()
                 if ((pb_falling_edge & PB1) | (uart_in == 1))
                 {
                     NOTE = EHIGH;
-                    input = 1;
+                    input = 0;
                     spi = 0b0111110 | (1 << 7);
                     u_idx++;
                     elapsed_time = 0; // increments the index of the tones played
@@ -222,7 +228,7 @@ int main()
                 else if ((pb_falling_edge & PB2) | (uart_in == 2))
                 {
                     NOTE = CSHARP;
-                    input = 2;
+                    input = 1;
                     spi = 0b1101011 | (1 << 7);
                     u_idx++;
                     elapsed_time = 0;
@@ -231,7 +237,7 @@ int main()
                 else if ((pb_falling_edge & PB3) | (uart_in == 3))
                 {
                     NOTE = A;
-                    input = 3;
+                    input = 2;
                     spi = 0b0111110;
                     u_idx++;
                     elapsed_time = 0;
@@ -240,7 +246,7 @@ int main()
                 else if ((pb_falling_edge & PB4) | (uart_in == 4))
                 {
                     NOTE = ELOW;
-                    input = 4;
+                    input = 3;
                     spi = 0b1101011;
                     u_idx++;
                     elapsed_time = 0;
@@ -291,11 +297,6 @@ int main()
                 update_table((char**)names, (char*)scores, name, level);
                 show_table((char**)names, (char*)scores);
                 SERIAL_STATE = AWAITING_COMMAND;
-                // if (!(search_table(&SCORES, &PLAYER)))
-                // {
-                //     update_table(&SCORES, &PLAYER);
-                // }
-                // show_table(&SCORES, level);
                 level = 1;
                 GAME_STATE = START;
             }
@@ -341,7 +342,7 @@ int main()
                 }
                 else
                 {
-                    if ((level > 9) | (tens > 0))
+                    if (tens > 0)
                     {
                         spi_write(segs[tens] | (1 << 7));
                     }

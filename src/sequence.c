@@ -50,7 +50,8 @@ void update_table(char **names, char *scores, char *name, uint16_t score)
             names[i] = name;
             scores[i] = score;
             return;
-        } else if (scores[i] < score)
+        }
+        else if (scores[i] < score)
         {
             names[i] = name;
             scores[i] = score;
@@ -67,5 +68,14 @@ void show_table(char **names, char *scores)
         {
             printf("%s %d\n", names[i], scores[i]);
         }
+    }
+}
+void clear_str(char *str)
+{
+    int i = 0;
+    while (str[i] != '\0')
+    {
+        str[i] = '\0';
+        i++;
     }
 }
