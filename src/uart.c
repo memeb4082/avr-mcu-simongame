@@ -75,6 +75,42 @@ void stdio_init(void)
 ISR(USART0_RXC_vect)
 {
     char rx_data = USART0.RXDATAL;
+    switch (SERIAL_STATE)
+    {
+        case (AWAITING_COMMAND):
+        {
+            switch (rx_data)
+            {
+                case ',':
+                case 'k':
+                {
+                    if (octave < OCTAVES_MAX)
+                    {
+                        octave++;
+                    }
+                    break;
+                }
+                case '.':
+                case 'l':
+                {
+                    if (octave > OCTAVES_MIN)
+                    {
+                        octave--;
+                    }
+                    break;
+                }
+            }
+        }
+        case AWAITING_PAYLOAD:
+        {
+            break;
+        }
+    }
+    if (BUZZER == PLAY)
+    {
+        stop_tone();
+        play_tone();
+    }
     // switch (SERIAL_STATE)
     // {
     // case AWAITING_COMMAND:

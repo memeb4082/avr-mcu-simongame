@@ -66,7 +66,6 @@ int main()
     // Stores input of user and shii
     uint8_t input;
     // Bool var sorta
-    uint8_t valid = 1;
     while (1)
     {
         /*
@@ -175,7 +174,6 @@ int main()
                     elapsed_time = 0;
                     if (input == next_step(&STATE_MATCH))
                     {
-                        // valid *= 1;
                         if (u_idx == level)
                         {
                             score = level % 100;
