@@ -79,7 +79,6 @@ int main()
         TODO: Switch to ISR maybe
         */
         delay = ((219 * (ADC0.RESULT)) >> 13) + 249;
-        printf("Delay: %" PRId16 "\n", (delay));
         /*
         If multiple pushbuttons are on a single port, transitions for all
         pushbuttons can be calculated in parallel using bitwise operations
