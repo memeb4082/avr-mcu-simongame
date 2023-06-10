@@ -19,6 +19,12 @@ extern volatile uint8_t len;
 extern volatile buzzer_state BUZZER;
 static serial_state SERIAL_STATE;
 uint32_t LFSR_PAYLOAD;
+/* 
+tri state variable where:
+2 - created new payload and to be accepted at next fail
+1 - override init state
+0 - empty
+*/
 uint8_t payload_set = 0;
 uint8_t parsed_result;
 uint8_t count;
@@ -99,10 +105,25 @@ ISR(USART0_RXC_vect)
                     }
                     break;
                 }
+                case '9':
+                case 'o':
+                {
+                    SERIAL_STATE = AWAITING_PAYLOAD;
+                }
             }
         }
         case AWAITING_PAYLOAD:
         {
+            parsed_result = hexchar_to_int((char)rx_data);
+            if (parsed_result != 16)
+            {
+                LFSR_PAYLOAD = (LFSR_PAYLOAD << 4) | parsed_result;
+            }
+            if (++count >= 8)
+            {
+                payload_set = 2;
+                SERIAL_STATE = AWAITING_COMMAND;
+            }
             break;
         }
     }

@@ -248,7 +248,11 @@ int main()
         }
         case FAIL:
         {
-            STATE_LFSR = STATE_MATCH; // start the new sequence from the one after the wrong input
+            if ((payload_set == 2))
+            {
+                STATE_LFSR = STATE_MATCH; // start the new sequence from the one after the wrong input
+                payload_set = 1;
+            }
             if (elapsed_time >= delay)
             {
                 level = 1;
@@ -271,10 +275,11 @@ int main()
         {
             if (elapsed_time >= delay)
             {
-                if (payload_set)
+                if (payload_set > 0)
                 {
                     STATE_LFSR = LFSR_PAYLOAD;
                     STATE_MATCH = LFSR_PAYLOAD;
+                    payload_set = 1; // set to 1 for next fail
                 }
                 else
                 {
