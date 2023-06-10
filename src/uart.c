@@ -87,9 +87,31 @@ ISR(USART0_RXC_vect)
         {
             switch (rx_data)
             {
-
-            
-                case ',':
+                case '1':
+                case 'q':
+                {
+                    uart_in = 1;
+                    break;
+                }
+                case '2':
+                case 'w':
+                {
+                    uart_in = 2;
+                    break;
+                }
+                case '3':
+                case 'e':
+                {
+                    uart_in = 3;
+                    break;
+                }
+                case '4':
+                case 'r':
+                {
+                    uart_in = 4;
+                    break;
+                }
+                case ',': 
                 case 'k':
                 {
                     if (octave < OCTAVES_MAX)

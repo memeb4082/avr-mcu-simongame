@@ -163,7 +163,7 @@ int main()
             {
                 if (!pb_released)
                 {
-                    if (pb_rising_edge & (PB1 | PB2 | PB3 | PB4))
+                    if ((pb_rising_edge & (PB1 | PB2 | PB3 | PB4)) | (uart_in > 0))
                     {
                         pb_released = 1;
                     }
@@ -171,6 +171,7 @@ int main()
                 else if (elapsed_time >= delay)
                 {
                     stop_tone();
+                    uart_in = 0;
                     elapsed_time = 0;
                     if (input == next_step(&STATE_MATCH))
                     {
@@ -201,7 +202,7 @@ int main()
             }
             case PAUSE:
             {
-                if (pb_falling_edge & PB1)
+                if ((pb_falling_edge & PB1) | (uart_in == 1))
                 {
                     NOTE = EHIGH;
                     input = 1;
@@ -210,7 +211,7 @@ int main()
                     elapsed_time = 0; // increments the index of the tones played
                     play_tone();
                 }
-                else if (pb_falling_edge & PB2)
+                else if ((pb_falling_edge & PB2) | (uart_in == 2))
                 {
                     NOTE = CSHARP;
                     input = 2;
@@ -219,7 +220,7 @@ int main()
                     elapsed_time = 0;
                     play_tone();
                 }
-                else if (pb_falling_edge & PB3)
+                else if ((pb_falling_edge & PB3) | (uart_in == 3))
                 {
                     NOTE = A;
                     input = 3;
@@ -228,7 +229,7 @@ int main()
                     elapsed_time = 0;
                     play_tone();
                 }
-                else if (pb_falling_edge & PB4)
+                else if ((pb_falling_edge & PB4) | (uart_in == 4))
                 {
                     NOTE = ELOW;
                     input = 4;
