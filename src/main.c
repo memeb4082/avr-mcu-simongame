@@ -333,24 +333,7 @@ int main()
                         STATE_MATCH = LFSR_RESTORE;
                     }
                     elapsed_time = 0;
-                    GAME_STATE = SCORE;
-                } else {
-                    if ((elapsed_time % 2) == 1)
-                    {
-                        spi_write(SPI_SUCCESS);
-                    }
-                    else
-                    {
-                        spi_write(SPI_SUCCESS | (1 << 7));
-                    }
-                }
-                break;
-            }
-            case SCORE:
-            {
-                if (elapsed_time >= delay)
-                {
-                    elapsed_time = 0;
+                    // GAME_STATE = SCORE;
                     GAME_STATE = START;
                 } else {
                     if ((elapsed_time % 2) == 1)
@@ -365,7 +348,18 @@ int main()
                         }
                     }
                 }
+                break;
             }
+        //     case SCORE:
+        //     {
+        //         if (elapsed_time >= delay)
+        //         {
+        //             elapsed_time = 0;
+        //             GAME_STATE = START;
+        //         } else {
+                    
+        //         }
+        //     }
         }
     }
 }
