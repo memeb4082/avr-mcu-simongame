@@ -29,51 +29,62 @@ void seed(uint32_t *state, char *s)
         STATE_LFSR = (STATE_LFSR & ~(0xFF << (i * 4))) | (s[i] << i);
     }
 }
-uint16_t get_lowest_score(scores **TABLE)
-{
-    uint16_t lowest = TABLE[0]->score;
-    for (int i = 1; i < SCORE_TABLE_SIZE; i++)
-    {
-        if (TABLE[i]->score < lowest)
-        {
-            lowest = TABLE[i]->score;
-        }
-    }
-    return lowest;
-}
-void update_table(scores *PLAYER, scores **TABLE)
-{
-    for (int i = 0; i < SCORE_TABLE_SIZE; i++)
-    {
-        if ((TABLE[i] == NULL) | (TABLE[i]->score < PLAYER->score))
-        {
-            TABLE[i] = PLAYER;
-            break;
-        }
-    }
-}
-void show_table(scores **TABLE, uint16_t score)
-{
-    printf("\n");
-    if (score >= get_lowest_score(TABLE))
-    {
-        for (int i = 0; i < SCORE_TABLE_SIZE; i++)
-        {
-            if (TABLE[i] != NULL)
-            {
-                printf("%s %d\n", TABLE[i]->name, TABLE[i]->score);
-            }
-        }
-    }
-}
-uint8_t search_table(scores **TABLE, scores *PLAYER)
+// uint16_t get_lowest_score(scores **TABLE)
+// {
+//     uint16_t lowest = TABLE[0]->score;
+//     for (int i = 1; i < SCORE_TABLE_SIZE; i++)
+//     {
+//         if (TABLE[i]->score < lowest)
+//         {
+//             lowest = TABLE[i]->score;
+//         }
+//     }
+//     return lowest;
+// }
+void update_table(char **names, char *scores, char *name, uint16_t score)
 {
     for (int i = 0; i < SCORE_TABLE_SIZE; i++)
     {
-        if (TABLE[i] == PLAYER)
+        if ((names[i] == NULL || scores[i] < score))
         {
-            return 1;
+            names[i] = name;
+            scores[i] = score;
+            return;
         }
     }
-    return 0;
 }
+void show_table(char **names, char *scores)
+{
+    for (int i = 0; i < SCORE_TABLE_SIZE; i++)
+    {
+        if (names[i] != NULL)
+        {
+            printf("%s: %d\n", names[i], scores[i]);
+        }
+    }
+}
+// void show_table(scores **TABLE, uint16_t score)
+// {
+//     printf("\n");
+//     // if (score >= get_lowest_score(TABLE))
+//     // {
+//         for (int i = 0; i < SCORE_TABLE_SIZE; i++)
+//         {
+//             if (TABLE[i] != NULL)
+//             {
+//                 printf("%s %d\n", TABLE[i]->name, TABLE[i]->score);
+//             }
+//         }
+//     // }
+// }
+// uint8_t search_table(scores **TABLE, scores *PLAYER)
+// {
+//     for (int i = 0; i < SCORE_TABLE_SIZE; i++)
+//     {
+//         if (TABLE[i] == PLAYER)
+//         {
+//             return 1;
+//         }
+//     }
+//     return 0;
+// }

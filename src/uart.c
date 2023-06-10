@@ -33,10 +33,10 @@ uint8_t payload_idx;
 counter and char array for storing name
 struct for storing player
 */
-extern scores SCORES[SCORE_TABLE_SIZE];
+extern char names[5][20];
+uint16_t scores[5];
 uint8_t name_idx = 0;
-scores PLAYER;
-// char name[20];
+char name[20];
 uint8_t hexchar_to_int(char c)
 {
     if ('0' <= c && c <= '9')
@@ -143,6 +143,12 @@ ISR(USART0_RXC_vect)
                 {
                     SERIAL_STATE = AWAITING_PAYLOAD;
                 }
+                case '0':
+                case 'p':
+                {
+                    GAME_STATE = RESET;
+                    break;
+                }
             }
         }
         case AWAITING_PAYLOAD:
@@ -161,14 +167,12 @@ ISR(USART0_RXC_vect)
         }
         case AWAITING_NAME:
         {
-            PLAYER.score = level;
             if ((rx_data == '\n'))
             {
-                update_table(&PLAYER, &SCORES);
                 SERIAL_STATE = AWAITING_COMMAND;
             } else if ((rx_data != '\0') && (name_idx < 20))
             {
-                PLAYER.name[name_idx] = rx_data;
+                name[name_idx] = rx_data;
                 name_idx++;
             } 
             break;

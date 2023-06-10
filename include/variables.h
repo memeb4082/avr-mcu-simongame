@@ -38,6 +38,7 @@ typedef enum {
     OUTPUT,
     INPUT,
     SUCCESS,
+    RESET,
     FAIL
 } state;
 
@@ -54,9 +55,9 @@ typedef enum
     AWAITING_NAME,
 } serial_state;
 
-typedef struct
-{
-    uint16_t score;
-    char name[20];
-} scores;
+// typedef struct
+// {
+//     uint16_t score;
+//     char name[20];
+// } scores;
 #endif

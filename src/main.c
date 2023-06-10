@@ -41,8 +41,9 @@ volatile buzzer_state BUZZER = PAUSE;
 volatile uint8_t uart_in;
 volatile uint8_t len;
 const uint32_t SHIFT_MASK = 0xFFFFFFFF;
-scores SCORES[5];
-extern scores PLAYER;
+char* names[5];
+uint16_t scores[5];
+extern char name[20];
 int main()
 {
     // initialise stuff
@@ -252,6 +253,20 @@ int main()
             }
             break;
         }
+        case RESET:
+        {
+            if (payload_set > 0)
+            {
+                STATE_LFSR = LFSR_PAYLOAD;
+                STATE_MATCH = LFSR_PAYLOAD;
+                payload_set = 1;
+            }
+            u_idx = 0;
+            idx = 0;
+            level = 1;
+            elapsed_time = 0;
+            GAME_STATE = START;
+        }
         case FAIL:
         {
             if ((payload_set == 2))
@@ -259,14 +274,16 @@ int main()
                 STATE_LFSR = STATE_MATCH; // start the new sequence from the one after the wrong input
                 payload_set = 1;
             }
-            if (elapsed_time >= WAIT_FAIL)
+            if ((elapsed_time >= WAIT_FAIL) | (SERIAL_STATE == AWAITING_COMMAND))
             {
+                update_table(&names, &scores, name, level);
+                show_table(&names, &scores);
                 SERIAL_STATE = AWAITING_COMMAND;
-                if (!(search_table(&SCORES, &PLAYER)))
-                {
-                    update_table(&SCORES, &PLAYER);
-                }
-                show_table(&SCORES, level);
+                // if (!(search_table(&SCORES, &PLAYER)))
+                // {
+                //     update_table(&SCORES, &PLAYER);
+                // }
+                // show_table(&SCORES, level);
                 level = 1;
                 GAME_STATE = START;
             }
