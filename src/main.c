@@ -316,7 +316,7 @@ int main()
         }
         case SUCCESS:
         {
-            if (elapsed_time >= delay)
+            if (elapsed_time >= (delay << 1))
             {
                 if (payload_set > 0)
                 {
@@ -333,8 +333,7 @@ int main()
                     STATE_MATCH = LFSR_RESTORE;
                 }
                 GAME_STATE = START;
-            }
-            else
+            } else if (elapsed_time >= delay)
             {
                 if ((elapsed_time % 2) == 1)
                 {
@@ -346,6 +345,17 @@ int main()
                     {
                         spi_write(segs[tens] | (1 << 7));
                     }
+                }
+            }
+            else
+            {
+                if ((elapsed_time % 2) == 1)
+                {
+                    spi_write(SPI_SUCCESS);
+                }
+                else
+                {
+                    spi_write(SPI_SUCCESS | (1 << 7));
                 }
             }
             break;
