@@ -13,11 +13,12 @@ extern volatile int8_t octave;
 extern uint32_t STATE_LFSR;
 extern volatile uint32_t u_idx;
 extern volatile uint32_t idx;
-extern volatile uint8_t level;
+extern volatile uint16_t level;
 extern volatile int8_t STEP;
 extern volatile uint8_t len;
 extern volatile buzzer_state BUZZER;
-static serial_state SERIAL_STATE;
+volatile serial_state SERIAL_STATE;
+extern uint16_t elapsed_time;
 uint32_t LFSR_PAYLOAD;
 /* 
 tri state variable where:
@@ -27,7 +28,15 @@ tri state variable where:
 */
 uint8_t payload_set = 0;
 uint8_t parsed_result;
-uint8_t count;
+uint8_t payload_idx;
+/*
+counter and char array for storing name
+struct for storing player
+*/
+extern scores SCORES[SCORE_TABLE_SIZE];
+uint8_t name_idx = 0;
+scores PLAYER;
+// char name[20];
 uint8_t hexchar_to_int(char c)
 {
     if ('0' <= c && c <= '9')
@@ -143,11 +152,25 @@ ISR(USART0_RXC_vect)
             {
                 LFSR_PAYLOAD = (LFSR_PAYLOAD << 4) | parsed_result;
             }
-            if (++count >= 8)
+            if (++payload_idx >= 8)
             {
                 payload_set = 2;
                 SERIAL_STATE = AWAITING_COMMAND;
             }
+            break;
+        }
+        case AWAITING_NAME:
+        {
+            PLAYER.score = level;
+            if ((rx_data == '\n'))
+            {
+                update_table(&PLAYER, &SCORES);
+                SERIAL_STATE = AWAITING_COMMAND;
+            } else if ((rx_data != '\0') && (name_idx < 20))
+            {
+                PLAYER.name[name_idx] = rx_data;
+                name_idx++;
+            } 
             break;
         }
     }

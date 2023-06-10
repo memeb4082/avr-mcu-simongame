@@ -12,14 +12,15 @@
 // TODO: check if seed vars are right ig, cause autograder fucked up (worked, bad)
 uint32_t STATE_LFSR = LFSR_INIT;  // LFSR state for creating random sequence
 uint32_t STATE_MATCH = LFSR_INIT; // LFSR state to match against random sequence
-volatile uint16_t NOTE;
+uint16_t NOTE;
 volatile uint8_t pb_released = 0;
 volatile int8_t octave = 0;
-volatile uint8_t score;
-volatile uint16_t level = 1;
+uint8_t score;
+uint16_t level = 1;
 volatile uint16_t delay;
-volatile int8_t STEP;
+int8_t STEP;
 extern volatile uint16_t playback_time;
+extern volatile serial_state SERIAL_STATE;
 extern uint32_t LFSR_PAYLOAD;
 extern uint8_t payload_set;
 // Thingy to store spi out for numbers
@@ -38,9 +39,10 @@ volatile state GAME_STATE = START;
 volatile state PREV;
 volatile buzzer_state BUZZER = PAUSE;
 volatile uint8_t uart_in;
-volatile char *name;
 volatile uint8_t len;
 const uint32_t SHIFT_MASK = 0xFFFFFFFF;
+scores SCORES[5];
+extern scores PLAYER;
 int main()
 {
     // initialise stuff
@@ -75,7 +77,6 @@ int main()
         TODO: Switch to ISR maybe
         */
         delay = (117 * (ADC0.RESULT >> 12)) + 248;
-
         /*
         If multiple pushbuttons are on a single port, transitions for all
         pushbuttons can be calculated in parallel using bitwise operations
@@ -187,14 +188,18 @@ int main()
                             level++;
                             u_idx = 0;
                             idx = 0;
+                            printf("SUCCESS\n");
                             GAME_STATE = SUCCESS;
                         }
                     }
                     else
                     {
                         // valid *= 0;
+                        printf("GAME OVER\n");
+                        printf("Enter name: ");
                         u_idx = 0;
                         idx = 0;
+                        SERIAL_STATE = AWAITING_NAME;
                         GAME_STATE = FAIL;
                     }
                 }
@@ -254,8 +259,14 @@ int main()
                 STATE_LFSR = STATE_MATCH; // start the new sequence from the one after the wrong input
                 payload_set = 1;
             }
-            if (elapsed_time >= delay)
+            if (elapsed_time >= WAIT_FAIL)
             {
+                SERIAL_STATE = AWAITING_COMMAND;
+                if (!(search_table(&SCORES, &PLAYER)))
+                {
+                    update_table(&SCORES, &PLAYER);
+                }
+                show_table(&SCORES, level);
                 level = 1;
                 GAME_STATE = START;
             }
@@ -270,6 +281,7 @@ int main()
                     spi_write(SPI_FAIL | (1 << 7));
                 }
             }
+            
             break;
         }
         case SUCCESS:

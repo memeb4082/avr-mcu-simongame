@@ -1,6 +1,8 @@
 #include <sequence.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <uart.h>
+#include <variables.h>
 /*
 Pseudorandom number generator to generate seed for gameplay
 @param *state pointer to state variable
@@ -19,11 +21,59 @@ uint8_t next_step(uint32_t *state)
     *state = STATE_LFSR;
     return STEP;
 }
-void seed(uint32_t *state, char* s)
+void seed(uint32_t *state, char *s)
 {
     uint32_t STATE_LFSR = *state;
     for (int i = 0; i < 8; i++)
     {
         STATE_LFSR = (STATE_LFSR & ~(0xFF << (i * 4))) | (s[i] << i);
     }
+}
+uint16_t get_lowest_score(scores **TABLE)
+{
+    uint16_t lowest = TABLE[0]->score;
+    for (int i = 1; i < SCORE_TABLE_SIZE; i++)
+    {
+        if (TABLE[i]->score < lowest)
+        {
+            lowest = TABLE[i]->score;
+        }
+    }
+    return lowest;
+}
+void update_table(scores *PLAYER, scores **TABLE)
+{
+    for (int i = 0; i < SCORE_TABLE_SIZE; i++)
+    {
+        if ((TABLE[i] == NULL) | (TABLE[i]->score < PLAYER->score))
+        {
+            TABLE[i] = PLAYER;
+            break;
+        }
+    }
+}
+void show_table(scores **TABLE, uint16_t score)
+{
+    printf("\n");
+    if (score >= get_lowest_score(TABLE))
+    {
+        for (int i = 0; i < SCORE_TABLE_SIZE; i++)
+        {
+            if (TABLE[i] != NULL)
+            {
+                printf("%s %d\n", TABLE[i]->name, TABLE[i]->score);
+            }
+        }
+    }
+}
+uint8_t search_table(scores **TABLE, scores *PLAYER)
+{
+    for (int i = 0; i < SCORE_TABLE_SIZE; i++)
+    {
+        if (TABLE[i] == PLAYER)
+        {
+            return 1;
+        }
+    }
+    return 0;
 }

@@ -16,8 +16,8 @@
 #define BR 9600
 #define MASK 0xE2023CAB
 #define LFSR_INIT 0x11230851
-#define WAIT_FAIL 2000 // TODO: Change to 5000, lower for testing
-
+#define WAIT_FAIL 5000 // TODO: Change to 5000, lower for testing
+#define SCORE_TABLE_SIZE 5
 // typedef enum
 // {
 //     START,
@@ -51,5 +51,12 @@ typedef enum
 {
     AWAITING_COMMAND,
     AWAITING_PAYLOAD,
+    AWAITING_NAME,
 } serial_state;
+
+typedef struct
+{
+    uint16_t score;
+    char name[20];
+} scores;
 #endif
