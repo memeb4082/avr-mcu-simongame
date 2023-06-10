@@ -38,6 +38,7 @@ typedef enum {
     OUTPUT,
     INPUT,
     SUCCESS,
+    SCORE,
     RESET,
     FAIL
 } state;

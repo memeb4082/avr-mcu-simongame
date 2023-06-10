@@ -176,7 +176,7 @@ ISR(USART0_RXC_vect)
         {
             if (name_idx > 0)
             {
-                clear_str(&name);
+                clear_str((char*)name);
             }
             if ((rx_data == '\n'))
             {

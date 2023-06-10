@@ -96,270 +96,276 @@ int main()
         /*-------------------------------------------------------------------------*/
         switch (GAME_STATE)
         {
-        case START:
-        {
-            if (idx == level) // check if the number of tones outputted is equal to level
+            case START:
             {
-                GAME_STATE = INPUT;
-            }
-            else
-            {
-                elapsed_time = 0; // reset elapsed time
-                STEP = next_step(&STATE_LFSR);
-                GAME_STATE = OUTPUT;
-                switch (STEP)
+                if (idx == level) // check if the number of tones outputted is equal to level
                 {
-                    case 0:
+                    GAME_STATE = INPUT;
+                }
+                else
+                {
+                    elapsed_time = 0; // reset elapsed time
+                    STEP = next_step(&STATE_LFSR);
+                    GAME_STATE = OUTPUT;
+                    switch (STEP)
                     {
-                        NOTE = EHIGH;
-                        spi = 0b0111110 | (1 << 7);
-                        idx++; // increments the index of the tones played
-                        break;
-                    }
-                    case 1:
-                    {
-                        NOTE = CSHARP;
-                        spi = 0b1101011 | (1 << 7);
-                        idx++; // increments the index of the tones played
-                        break;
-                    }
-                    case 2:
-                    {
-                        NOTE = A;
-                        spi = 0b0111110;
-                        idx++; // increments the index of the tones played
-                        break;
-                    }
-                    case 3:
-                    {
-                        NOTE = ELOW;
-                        spi = 0b1101011;
-                        idx++; // increments the index of the tones played
-                        break;
-                    }
-                    default:
-                    {
-                        GAME_STATE = START;
+                        case 0:
+                        {
+                            NOTE = EHIGH;
+                            spi = 0b0111110 | (1 << 7);
+                            idx++; // increments the index of the tones played
+                            break;
+                        }
+                        case 1:
+                        {
+                            NOTE = CSHARP;
+                            spi = 0b1101011 | (1 << 7);
+                            idx++; // increments the index of the tones played
+                            break;
+                        }
+                        case 2:
+                        {
+                            NOTE = A;
+                            spi = 0b0111110;
+                            idx++; // increments the index of the tones played
+                            break;
+                        }
+                        case 3:
+                        {
+                            NOTE = ELOW;
+                            spi = 0b1101011;
+                            idx++; // increments the index of the tones played
+                            break;
+                        }
+                        default:
+                        {
+                            GAME_STATE = START;
+                        }
                     }
                 }
+                break;
             }
-            break;
-        }
-        case OUTPUT:
-        {
-            if (elapsed_time < (delay >> 1))
+            case OUTPUT:
             {
-                play_tone();
-                spi_write(0xFF); // clear DISP
-            }
-            else if (elapsed_time < delay)
-            {
-                stop_tone();
-                spi_write(spi); // write the current tone to DISP
-            }
-            else if (elapsed_time >= delay)
-            {
-                spi_write(0xFF); // clear DISP
-                GAME_STATE = START;
-            }
-            break;
-        }
-        case INPUT:
-        {
-            spi_write(spi);
-            switch (BUZZER)
-            {
-            case PLAY:
-            {
-                if (!pb_released)
+                if (elapsed_time < (delay >> 1))
                 {
-                    if ((pb_rising_edge & (PB1 | PB2 | PB3 | PB4)) | (uart_in > 0))
-                    {
-                        pb_released = 1;
-                    }
+                    play_tone();
+                    spi_write(0xFF); // clear DISP
+                }
+                else if (elapsed_time < delay)
+                {
+                    stop_tone();
+                    spi_write(spi); // write the current tone to DISP
                 }
                 else if (elapsed_time >= delay)
                 {
-                    stop_tone();
-                    uart_in = 0;
-                    elapsed_time = 0;
-                    if (input == next_step(&STATE_MATCH))
+                    spi_write(0xFF); // clear DISP
+                    GAME_STATE = START;
+                }
+                break;
+            }
+            case INPUT:
+            {
+                spi_write(spi);
+                switch (BUZZER)
+                {
+                case PLAY:
+                {
+                    if (!pb_released)
                     {
-                        if (u_idx == level)
+                        if ((pb_rising_edge & (PB1 | PB2 | PB3 | PB4)) | (uart_in > 0))
                         {
-                            score = level % 100;
-                            ones = level % 10;
-                            while (score > 9)
+                            pb_released = 1;
+                        }
+                    }
+                    else if (elapsed_time >= delay)
+                    {
+                        stop_tone();
+                        uart_in = 0;
+                        elapsed_time = 0;
+                        if (input == next_step(&STATE_MATCH))
+                        {
+                            if (u_idx == level)
                             {
-                                score -= 10;
-                                tens++;
+                                score = level % 100;
+                                ones = level % 10;
+                                while (score > 9)
+                                {
+                                    score -= 10;
+                                    tens++;
+                                }
+                                level++;
+                                u_idx = 0;
+                                idx = 0;
+                                GAME_STATE = SUCCESS;
                             }
-                            level++;
+                        }
+                        else
+                        {
+                            // valid *= 0;
+                            printf("GAME OVER\n");
+                            printf("Enter name: ");
+                            level = 0;
                             u_idx = 0;
                             idx = 0;
-                            GAME_STATE = SUCCESS;
+                            SERIAL_STATE = AWAITING_NAME;
+                            GAME_STATE = FAIL;
                         }
+                    }
+                    break;
+                }
+                case PAUSE:
+                {
+                    if ((pb_falling_edge & PB1) | (uart_in == 1))
+                    {
+                        NOTE = EHIGH;
+                        input = 0;
+                        spi = 0b0111110 | (1 << 7);
+                        u_idx++;
+                        elapsed_time = 0; // increments the index of the tones played
+                        play_tone();
+                    }
+                    else if ((pb_falling_edge & PB2) | (uart_in == 2))
+                    {
+                        NOTE = CSHARP;
+                        input = 1;
+                        spi = 0b1101011 | (1 << 7);
+                        u_idx++;
+                        elapsed_time = 0;
+                        play_tone();
+                    }
+                    else if ((pb_falling_edge & PB3) | (uart_in == 3))
+                    {
+                        NOTE = A;
+                        input = 2;
+                        spi = 0b0111110;
+                        u_idx++;
+                        elapsed_time = 0;
+                        play_tone();
+                    }
+                    else if ((pb_falling_edge & PB4) | (uart_in == 4))
+                    {
+                        NOTE = ELOW;
+                        input = 3;
+                        spi = 0b1101011;
+                        u_idx++;
+                        elapsed_time = 0;
+                        play_tone();
                     }
                     else
                     {
-                        // valid *= 0;
-                        printf("GAME OVER\n");
-                        printf("Enter name: ");
-                        level = 0;
-                        u_idx = 0;
-                        idx = 0;
-                        SERIAL_STATE = AWAITING_NAME;
-                        GAME_STATE = FAIL;
+                        spi = 0xFF;
                     }
+                    break;
+                }
                 }
                 break;
             }
-            case PAUSE:
+            case RESET:
             {
-                if ((pb_falling_edge & PB1) | (uart_in == 1))
-                {
-                    NOTE = EHIGH;
-                    input = 0;
-                    spi = 0b0111110 | (1 << 7);
-                    u_idx++;
-                    elapsed_time = 0; // increments the index of the tones played
-                    play_tone();
-                }
-                else if ((pb_falling_edge & PB2) | (uart_in == 2))
-                {
-                    NOTE = CSHARP;
-                    input = 1;
-                    spi = 0b1101011 | (1 << 7);
-                    u_idx++;
-                    elapsed_time = 0;
-                    play_tone();
-                }
-                else if ((pb_falling_edge & PB3) | (uart_in == 3))
-                {
-                    NOTE = A;
-                    input = 2;
-                    spi = 0b0111110;
-                    u_idx++;
-                    elapsed_time = 0;
-                    play_tone();
-                }
-                else if ((pb_falling_edge & PB4) | (uart_in == 4))
-                {
-                    NOTE = ELOW;
-                    input = 3;
-                    spi = 0b1101011;
-                    u_idx++;
-                    elapsed_time = 0;
-                    play_tone();
-                }
-                else
-                {
-                    spi = 0xFF;
-                }
-                break;
-            }
-            }
-            break;
-        }
-        case RESET:
-        {
-            STATE_LFSR = LFSR_RESTORE;
-            STATE_MATCH = LFSR_RESTORE;
-            if (payload_set > 0)
-            {
-                STATE_LFSR = LFSR_PAYLOAD;
-                STATE_MATCH = LFSR_PAYLOAD;
-                payload_set = 1;
-            }
-            u_idx = 0;
-            idx = 0;
-            level = 1;
-            elapsed_time = 0;
-            octave = 0;
-            GAME_STATE = START;
-        }
-        case FAIL:
-        {
-            if ((payload_set == 2))
-            {
-                // set lfsr to payload from uart
-                STATE_LFSR = LFSR_PAYLOAD;
-                STATE_MATCH = LFSR_PAYLOAD;
-                payload_set = 1;
-            } else {
-                // set lfsr to last value that user got right 
-                // and set restore value to last value correct
-                LFSR_RESTORE = STATE_MATCH;
                 STATE_LFSR = LFSR_RESTORE;
-            }
-            if ((elapsed_time >= WAIT_FAIL) | (SERIAL_STATE == AWAITING_COMMAND))
-            {
-                update_table((char**)names, (char*)scores, name, level);
-                show_table((char**)names, (char*)scores);
-                SERIAL_STATE = AWAITING_COMMAND;
+                STATE_MATCH = LFSR_RESTORE;
+                if (payload_set > 0)
+                {
+                    STATE_LFSR = LFSR_PAYLOAD;
+                    STATE_MATCH = LFSR_PAYLOAD;
+                    payload_set = 1;
+                }
+                u_idx = 0;
+                idx = 0;
                 level = 1;
+                elapsed_time = 0;
+                octave = 0;
                 GAME_STATE = START;
             }
-            else
+            case FAIL:
             {
-                if ((elapsed_time % 2) == 1)
-                {
-                    spi_write(SPI_FAIL);
-                }
-                else
-                {
-                    spi_write(SPI_FAIL | (1 << 7));
-                }
-            }
-            
-            break;
-        }
-        case SUCCESS:
-        {
-            if (elapsed_time >= (delay << 1))
-            {
-                if (payload_set > 0)
+                if ((payload_set == 2))
                 {
                     // set lfsr to payload from uart
                     STATE_LFSR = LFSR_PAYLOAD;
                     STATE_MATCH = LFSR_PAYLOAD;
-                    payload_set = 1; // set to 1 for next fail
-                }
-                else
-                {
-                    // restore lfsr from lfsr restore
-                    // could be either lfsr init or lfsr from last failure
+                    payload_set = 1;
+                } else {
+                    // set lfsr to last value that user got right 
+                    // and set restore value to last value correct
+                    LFSR_RESTORE = STATE_MATCH;
                     STATE_LFSR = LFSR_RESTORE;
-                    STATE_MATCH = LFSR_RESTORE;
                 }
-                GAME_STATE = START;
-            } else if (elapsed_time >= delay)
-            {
-                if ((elapsed_time % 2) == 1)
+                if ((elapsed_time >= WAIT_FAIL) | (SERIAL_STATE == AWAITING_COMMAND))
                 {
-                    spi_write(segs[ones]);
+                    update_table((char**)names, (char*)scores, name, level);
+                    show_table((char**)names, (char*)scores);
+                    SERIAL_STATE = AWAITING_COMMAND;
+                    level = 1;
+                    GAME_STATE = START;
                 }
                 else
                 {
-                    if (tens > 0)
+                    if ((elapsed_time % 2) == 1)
                     {
-                        spi_write(segs[tens] | (1 << 7));
+                        spi_write(SPI_FAIL);
+                    }
+                    else
+                    {
+                        spi_write(SPI_FAIL | (1 << 7));
+                    }
+                }
+                
+                break;
+            }
+            case SUCCESS:
+            {
+                if (elapsed_time >= delay)
+                {
+                    if (payload_set > 0)
+                    {
+                        // set lfsr to payload from uart
+                        STATE_LFSR = LFSR_PAYLOAD;
+                        STATE_MATCH = LFSR_PAYLOAD;
+                        payload_set = 1; // set to 1 for next fail
+                    }
+                    else
+                    {
+                        // restore lfsr from lfsr restore
+                        // could be either lfsr init or lfsr from last failure
+                        STATE_LFSR = LFSR_RESTORE;
+                        STATE_MATCH = LFSR_RESTORE;
+                    }
+                    elapsed_time = 0;
+                    GAME_STATE = SCORE;
+                } else {
+                    if ((elapsed_time % 2) == 1)
+                    {
+                        spi_write(SPI_SUCCESS);
+                    }
+                    else
+                    {
+                        spi_write(SPI_SUCCESS | (1 << 7));
+                    }
+                }
+                break;
+            }
+            case SCORE:
+            {
+                if (elapsed_time >= delay)
+                {
+                    elapsed_time = 0;
+                    GAME_STATE = START;
+                } else {
+                    if ((elapsed_time % 2) == 1)
+                    {
+                        spi_write(segs[ones]);
+                    }
+                    else
+                    {
+                        if (tens > 0)
+                        {
+                            spi_write(segs[tens] | (1 << 7));
+                        }
                     }
                 }
             }
-            else
-            {
-                if ((elapsed_time % 2) == 1)
-                {
-                    spi_write(SPI_SUCCESS);
-                }
-                else
-                {
-                    spi_write(SPI_SUCCESS | (1 << 7));
-                }
-            }
-            break;
-        }
         }
     }
 }
