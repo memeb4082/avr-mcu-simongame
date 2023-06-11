@@ -90,7 +90,6 @@ void stdio_init(void)
 ISR(USART0_RXC_vect)
 {
     char rx_data = USART0.RXDATAL;
-    USART0.TXDATAL = rx_data;
     switch (SERIAL_STATE)
     {
         case (AWAITING_COMMAND):
@@ -152,6 +151,10 @@ ISR(USART0_RXC_vect)
                     GAME_STATE = RESET;
                     break;
                 }
+                default:
+                {
+                    break;
+                }
             }
             break;
         }
@@ -174,10 +177,6 @@ ISR(USART0_RXC_vect)
         }
         case AWAITING_NAME:
         {
-            if (name_idx > 0)
-            {
-                clear_str((char*)name);
-            }
             if ((rx_data == '\n'))
             {
                 SERIAL_STATE = AWAITING_COMMAND;

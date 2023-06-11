@@ -20,7 +20,6 @@ void play_tone()
     {
         TCA0.SINGLE.PERBUF = NOTE >> (octave);
     }
-    // TODO: up the duty cycle, set to lower value so i dont destroy my fucking ears
     TCA0.SINGLE.CMP0BUF = TCA0.SINGLE.PERBUF >> 1;
 }
 /*

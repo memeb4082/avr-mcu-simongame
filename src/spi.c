@@ -11,5 +11,5 @@ ISR(SPI0_INT_vect)
 {
     PORTA.OUTCLR = PIN1_bm;
     PORTA.OUTSET = PIN1_bm;
-    SPI0.INTFLAGS |= (1 << SPI_RXCIF_bp); // Clears SPI interrupt flag, forgot to do this cause i am actually a fucking stupid
+    SPI0.INTFLAGS |= (1 << SPI_RXCIF_bp);
 }
