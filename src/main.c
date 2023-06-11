@@ -147,22 +147,35 @@ int main()
             }
             case OUTPUT:
             {
-                if (elapsed_time < (delay >> 1))
+                // if (elapsed_time < (delay >> 1))
+                // {
+                //     play_tone();
+                //     spi_write(0xFF); // clear DISP
+                // }
+                // else if (elapsed_time < delay)
+                // {
+                //     stop_tone();
+                //     spi_write(spi); // write the current tone to DISP
+                // }
+                // else if (elapsed_time >= delay)
+                // {
+                //     spi_write(0xFF); // clear DISP
+                //     GAME_STATE = START;
+                // }
+                
+                if (elapsed_time >= delay)
                 {
-                    play_tone();
                     spi_write(0xFF); // clear DISP
-                }
-                else if (elapsed_time < delay)
-                {
                     stop_tone();
-                    spi_write(spi); // write the current tone to DISP
-                    spi_write(0xFF); // clear DISP
-
-                }
-                else if (elapsed_time >= delay)
-                {
-                    spi_write(0xFF); // clear DISP
                     GAME_STATE = START;
+                } else if (elapsed_time > (delay >> 1))
+                {
+                    spi_write(spi);
+                    play_tone();
+                } else
+                {
+                    spi_write(0xFF);
+                    stop_tone();
                 }
                 break;
             }
@@ -204,6 +217,7 @@ int main()
                         }
                         else
                         {
+                            // valid *= 0;
                             printf("GAME OVER\n");
                             printf("Enter name: ");
                             level = 0;
