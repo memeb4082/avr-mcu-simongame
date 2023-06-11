@@ -156,6 +156,8 @@ int main()
                 {
                     stop_tone();
                     spi_write(spi); // write the current tone to DISP
+                    spi_write(0xFF); // clear DISP
+
                 }
                 else if (elapsed_time >= delay)
                 {
@@ -202,7 +204,6 @@ int main()
                         }
                         else
                         {
-                            // valid *= 0;
                             printf("GAME OVER\n");
                             printf("Enter name: ");
                             level = 0;

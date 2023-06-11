@@ -18,20 +18,6 @@
 #define LFSR_INIT 0x11230851
 #define WAIT_FAIL 5000 // TODO: Change to 5000, lower for testing
 #define SCORE_TABLE_SIZE 5
-// typedef enum
-// {
-//     START,
-//     OUTPUT,
-//     USER_INPUT,
-//     SUCCESS,
-//     FAIL,
-//     DISP_SCORE,
-//     UART_SCORE,
-//     RANKINGS,
-//     FINISH,
-//     RESET,
-//     // TODO: Figure out all the states and shii
-// } state;
 
 typedef enum {
     START,
