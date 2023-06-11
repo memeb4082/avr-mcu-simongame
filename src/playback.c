@@ -2,10 +2,8 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <variables.h>
+#include <playback.h>
 
-extern int8_t octave;
-extern uint16_t NOTE;
-extern volatile buzzer_state BUZZER;
 /*
 Handles buzzer tone playback of different tones at different octaves
 */
