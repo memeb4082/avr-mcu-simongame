@@ -4,9 +4,6 @@
 #include <stdint.h>
 #include <variables.h>
 
-extern uint16_t NOTE;
-extern volatile int8_t octave;
-extern volatile buzzer_state BUZZER;
 void play_tone();
 void stop_tone();
 

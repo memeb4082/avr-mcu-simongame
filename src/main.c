@@ -9,6 +9,11 @@
 #include <timers.h>
 #include <spi.h>
 #include <uart.h>
+extern volatile uint16_t elapsed_time;
+extern volatile uint16_t playback_time;
+extern volatile uint16_t new_playback_time;
+extern volatile uint8_t allow_updating_playback_delay;
+extern volatile uint8_t pb_state;
 uint32_t STATE_LFSR = LFSR_INIT;  // LFSR state for creating random sequence
 uint32_t STATE_MATCH = LFSR_INIT; // LFSR state to match against random sequence
 uint32_t LFSR_RESTORE = LFSR_INIT; // LFSR state for restoring sequence

@@ -8,5 +8,4 @@ void seed(uint32_t *state, char *s);
 void update_table(char **names, char *scores, char *name, uint16_t score);
 void show_table(char **names, char *scores);
 void clear_str(char *str);
-// uint8_t search_table(scores **TABLE, scores *PLAYER);
 #endif
