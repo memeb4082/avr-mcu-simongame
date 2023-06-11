@@ -9,13 +9,12 @@
 #include <timers.h>
 #include <spi.h>
 #include <uart.h>
-// TODO: check if seed vars are right ig, cause autograder fucked up (worked, bad)
 uint32_t STATE_LFSR = LFSR_INIT;  // LFSR state for creating random sequence
 uint32_t STATE_MATCH = LFSR_INIT; // LFSR state to match against random sequence
 uint32_t LFSR_RESTORE = LFSR_INIT; // LFSR state for restoring sequence
-uint16_t NOTE;
-volatile uint8_t pb_released = 0;
-volatile int8_t octave = 0;
+uint16_t NOTE; // stores current note
+volatile uint8_t pb_released = 0; // flag to check if pushbutton is released
+volatile int8_t octave = 0; // stores current octave
 uint8_t score;
 uint16_t level = 1;
 volatile uint16_t delay;
@@ -24,7 +23,7 @@ extern volatile uint16_t playback_time;
 extern volatile serial_state SERIAL_STATE;
 extern uint32_t LFSR_PAYLOAD;
 extern uint8_t payload_set;
-// Thingy to store spi out for numbers
+// spi values for displaying numbers where segs[n] shows the digit n
 int8_t segs[10] = {
     0b0001000,
     0b1101011,
@@ -36,15 +35,21 @@ int8_t segs[10] = {
     0b1001011,
     0b0000000,
     0b0000001};
+// game state machine
 volatile state GAME_STATE = START;
-volatile state PREV;
+// buzzer state machine
 volatile buzzer_state BUZZER = PAUSE;
+// stores uart input
 volatile uint8_t uart_in;
+// stores length of sequence
 volatile uint8_t len;
+// shift mask, used to create new lfsr seed by ORing against the nth
+// character from uart input
 const uint32_t SHIFT_MASK = 0xFFFFFFFF;
-char* names[5];
-uint16_t scores[5];
 extern char name[20];
+
+char names[20][5];
+uint16_t scores[5];
 int main()
 {
     // initialise stuff
@@ -146,36 +151,21 @@ int main()
                 break;
             }
             case OUTPUT:
-            {
-                // if (elapsed_time < (delay >> 1))
-                // {
-                //     play_tone();
-                //     spi_write(0xFF); // clear DISP
-                // }
-                // else if (elapsed_time < delay)
-                // {
-                //     stop_tone();
-                //     spi_write(spi); // write the current tone to DISP
-                // }
-                // else if (elapsed_time >= delay)
-                // {
-                //     spi_write(0xFF); // clear DISP
-                //     GAME_STATE = START;
-                // }
-                
-                if (elapsed_time >= delay)
+            {   
+                if (elapsed_time < (delay >> 1))
+                {
+                    play_tone();
+                    spi_write(0xFF); // clear DISP
+                }
+                else if (elapsed_time < delay)
+                {
+                    stop_tone();
+                    spi_write(spi); // write the current tone to DISP
+                }
+                else if (elapsed_time >= delay)
                 {
                     spi_write(0xFF); // clear DISP
-                    stop_tone();
                     GAME_STATE = START;
-                } else if (elapsed_time > (delay >> 1))
-                {
-                    spi_write(spi);
-                    play_tone();
-                } else
-                {
-                    spi_write(0xFF);
-                    stop_tone();
                 }
                 break;
             }
@@ -217,7 +207,6 @@ int main()
                         }
                         else
                         {
-                            // valid *= 0;
                             printf("GAME OVER\n");
                             printf("Enter name: ");
                             level = 0;

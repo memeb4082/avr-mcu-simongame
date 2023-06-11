@@ -5,10 +5,10 @@
 #define PB2 PIN5_bm
 #define PB3 PIN6_bm
 #define PB4 PIN7_bm
-#define EHIGH 338
-#define CSHARP 284
-#define A 451
-#define ELOW 169
+#define EHIGH 9862
+#define CSHARP 11737
+#define A 7391
+#define ELOW 19724
 #define OCTAVES_MAX 3
 #define OCTAVES_MIN -2
 #define SPI_FAIL 0b1110111
@@ -18,6 +18,7 @@
 #define LFSR_INIT 0x11230851
 #define WAIT_FAIL 5000 // TODO: Change to 5000, lower for testing
 #define SCORE_TABLE_SIZE 5
+#define BAUD_RATE 1389
 
 typedef enum {
     START,

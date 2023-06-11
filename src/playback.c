@@ -14,10 +14,10 @@ void play_tone()
     BUZZER = PLAY;
     if (octave < 0)
     {
-        TCA0.SINGLE.PERBUF = ((int)(F_CPU / NOTE)) << (-octave);
+        TCA0.SINGLE.PERBUF = NOTE << (-octave);
     } else
     {
-        TCA0.SINGLE.PERBUF = ((int)(F_CPU / NOTE)) >> (octave);
+        TCA0.SINGLE.PERBUF = NOTE >> (octave);
     }
     // TODO: up the duty cycle, set to lower value so i dont destroy my fucking ears
     TCA0.SINGLE.CMP0BUF = TCA0.SINGLE.PERBUF >> 1;
