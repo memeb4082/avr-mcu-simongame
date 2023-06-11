@@ -203,6 +203,7 @@ int main()
                             level++;
                             u_idx = 0;
                             idx = 0;
+                            printf("SUCCESS\n");
                             GAME_STATE = SUCCESS;
                         }
                     }
@@ -321,6 +322,7 @@ int main()
                             while (name[j] != '\0')
                             {
                                 names[i][j] = name[j];
+                                name[j] = '\0';
                                 j++;
                             }
                             scores[i] = (level - 1);

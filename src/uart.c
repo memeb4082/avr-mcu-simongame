@@ -179,6 +179,7 @@ ISR(USART0_RXC_vect)
         {
             if ((rx_data == '\n'))
             {
+                name_idx = 0;
                 SERIAL_STATE = AWAITING_COMMAND;
             } else if ((rx_data != '\0') && (name_idx < 20))
             {
