@@ -1,4 +1,4 @@
-# Simon Game CAB202
+# Simon Game
 
 ## Gameplay
 - Upon system reset or starting a new game, the sequence length is set to one.
